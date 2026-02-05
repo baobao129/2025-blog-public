@@ -5,8 +5,8 @@
       <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
         <!-- Logo -->
         <router-link to="/" class="group flex items-center gap-3">
-          <div class="w-8 h-8 bg-primary text-white rounded flex items-center justify-center font-serif font-bold text-lg shadow-sm group-hover:bg-accent transition-colors">
-            博
+          <div class="w-8 h-8 bg-primary text-white rounded flex items-center justify-center shadow-sm group-hover:bg-accent transition-colors">
+            <Feather class="w-5 h-5" />
           </div>
           <span class="font-serif font-bold text-xl tracking-tight text-primary group-hover:text-accent transition-colors">
             我的博客
@@ -75,5 +75,5 @@
 
 <script setup>
 import { Toaster } from 'vue-sonner'
-import { Github as GithubIcon } from 'lucide-vue-next'
+import { Github as GithubIcon, Feather } from 'lucide-vue-next'
 </script>

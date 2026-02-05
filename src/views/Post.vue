@@ -80,7 +80,7 @@
           <span>返回首页</span>
         </router-link>
         <button 
-          @click="window.scrollTo({ top: 0, behavior: 'smooth' })" 
+          @click="scrollToTop" 
           class="text-text-muted hover:text-primary transition-colors"
         >
           回到顶部 &uarr;
@@ -109,6 +109,10 @@ const readingTime = ref(1)
 const articleRef = ref(null)
 const toc = ref([])
 const activeId = ref('')
+
+const scrollToTop = () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
 
 // 配置 marked
 marked.setOptions({

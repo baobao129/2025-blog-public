@@ -1,0 +1,14 @@
+0 verbose cli C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_global\node_modules\npm\bin\npm-cli.js
+1 info using npm@11.6.2
+2 info using node@v24.10.0
+3 silly config load:file:C:\Program Files\nodejs\node_global\node_modules\npm\npmrc
+4 silly config load:file:C:\Users\Administrator\Desktop\blog\2025-blog-public\.npmrc
+5 warn Unknown project config "enable-pre-post-scripts". This will stop working in the next major version of npm.
+6 silly config load:file:C:\Users\Administrator\.npmrc
+7 silly config load:file:C:\Program Files\nodejs\node_global\etc\npmrc
+8 verbose title npm run dev
+9 verbose argv "run" "dev"
+10 verbose logfile logs-max:10 dir:C:\Users\Administrator\Desktop\blog\2025-blog-public\.npm-cache\_logs\2026-02-05T12_14_58_996Z-
+11 verbose logfile C:\Users\Administrator\Desktop\blog\2025-blog-public\.npm-cache\_logs\2026-02-05T12_14_58_996Z-debug-0.log
+12 silly logfile start cleaning logs, removing 1 files
+13 silly logfile done cleaning log files

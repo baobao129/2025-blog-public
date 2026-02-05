@@ -46,36 +46,73 @@
     <!-- 编辑器主体 -->
     <div class="flex-grow flex overflow-hidden relative">
       <!-- 设置侧边栏 -->
-      <aside class="w-80 border-r border-gray-200 bg-gray-50 flex-shrink-0 overflow-y-auto p-6">
-        <div class="space-y-6">
-          <div>
-            <label class="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
-              文件名 (Slug)
-            </label>
-            <input 
-              v-model="editorTitle" 
-              type="text" 
-              placeholder="article-slug"
-              class="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all font-mono text-text-main"
-              :disabled="!isNewPost"
+      <aside 
+        class="border-r border-gray-200 bg-gray-50 flex-shrink-0 transition-all duration-300 ease-in-out relative flex flex-col"
+        :class="isSidebarOpen ? 'w-80' : 'w-16'"
+      >
+        <!-- 收起状态 -->
+        <div v-show="!isSidebarOpen" class="flex flex-col items-center py-4 space-y-4 w-full h-full">
+           <button 
+            @click="isSidebarOpen = true"
+            class="p-2 text-text-muted hover:text-primary hover:bg-gray-200 rounded-lg transition-all"
+            title="展开设置"
+          >
+            <Settings class="w-5 h-5" />
+          </button>
+          <div class="flex-grow"></div>
+           <button 
+            @click="isSidebarOpen = true"
+            class="p-2 text-text-muted hover:text-primary hover:bg-gray-200 rounded-lg transition-all"
+            title="展开侧边栏"
+          >
+            <PanelLeftOpen class="w-5 h-5" />
+          </button>
+        </div>
+
+        <!-- 展开状态 -->
+        <div v-show="isSidebarOpen" class="w-80 flex flex-col h-full overflow-hidden"> 
+          <div class="flex justify-between items-center p-6 pb-2 flex-shrink-0">
+            <h3 class="font-bold text-text-main text-sm uppercase tracking-wider flex items-center gap-2">
+                <Settings class="w-4 h-4" />
+                文章设置
+            </h3>
+            <button 
+              @click="isSidebarOpen = false"
+              class="text-text-muted hover:text-primary transition-colors p-1 rounded hover:bg-gray-200"
+              title="折叠侧边栏"
             >
-            <p class="text-[10px] text-text-light mt-2 leading-relaxed">
-              作为 URL 的一部分 (例如 /post/filename)。
-              <span v-if="isNewPost">创建后无法修改。建议使用英文和连字符。</span>
-              <span v-else class="text-accent">编辑模式下无法修改文件名。</span>
-            </p>
+              <PanelLeftClose class="w-4 h-4" />
+            </button>
+          </div>
+
+          <div class="p-6 space-y-6 flex-grow overflow-y-auto">
+            <div>
+              <label class="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
+                文件名 (Slug)
+              </label>
+              <input 
+                v-model="editorTitle" 
+                type="text" 
+                placeholder="article-slug"
+                class="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all font-mono text-text-main"
+                :disabled="!isNewPost"
+              >
+              <p class="text-[10px] text-text-light mt-2 leading-relaxed">
+                作为 URL 的一部分 (例如 /post/filename)。
+                <span v-if="isNewPost">创建后无法修改。建议使用英文和连字符。</span>
+                <span v-else class="text-accent">编辑模式下无法修改文件名。</span>
+              </p>
+            </div>
           </div>
         </div>
       </aside>
 
       <!-- 写作区 -->
-      <main class="flex-1 flex flex-col relative bg-white">
-        <textarea 
-          ref="textareaRef"
-          v-model="editorContent" 
-          placeholder="# 标题&#10;&#10;在此开始写作..."
-          class="flex-grow w-full p-8 resize-none focus:outline-none font-mono text-sm leading-relaxed text-text-main placeholder:text-gray-300 selection:bg-accent/10"
-        ></textarea>
+      <main class="flex-1 flex flex-col relative bg-white overflow-hidden">
+        <MonacoEditor 
+          ref="monacoRef"
+          v-model="editorContent"
+        />
       </main>
 
       <!-- 冲突解决模态框 -->
@@ -181,7 +218,8 @@ import { getFileContent, putFile, toBase64Utf8 } from '@/utils/github-client'
 import { GITHUB_CONFIG } from '@/consts'
 import { toast } from 'vue-sonner'
 import { marked } from 'marked'
-import { ArrowLeft, Save, Loader2, HelpCircle, X, Copy, BookOpen } from 'lucide-vue-next'
+import { ArrowLeft, Save, Loader2, HelpCircle, X, Copy, BookOpen, PanelLeftClose, PanelLeftOpen, Settings } from 'lucide-vue-next'
+import MonacoEditor from '@/components/MonacoEditor.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -192,7 +230,8 @@ const editorTitle = ref('')
 const editorContent = ref('')
 const saving = ref(false)
 const showTips = ref(false)
-const textareaRef = ref(null)
+const isSidebarOpen = ref(true)
+const monacoRef = ref(null)
 
 // 本地缓存相关状态
 const hasLocalChanges = ref(false)
@@ -247,23 +286,10 @@ const renderPreview = (code) => {
 
 // 插入文本到光标处
 const insertText = (text) => {
-  const textarea = textareaRef.value
-  if (!textarea) return
-
-  const start = textarea.selectionStart
-  const end = textarea.selectionEnd
-  const before = editorContent.value.substring(0, start)
-  const after = editorContent.value.substring(end)
-
-  editorContent.value = before + text + after
-  
-  // 恢复焦点并移动光标
-  setTimeout(() => {
-    textarea.focus()
-    textarea.setSelectionRange(start + text.length, start + text.length)
-  }, 0)
-  
-  toast.success('已插入代码')
+  if (monacoRef.value) {
+    monacoRef.value.insertText(text)
+    toast.success('已插入代码')
+  }
 }
 
 // 自动保存草稿
