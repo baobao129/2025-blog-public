@@ -119,6 +119,23 @@
                 <span v-else class="text-accent">编辑模式下无法修改文件名。</span>
               </p>
             </div>
+
+            <div>
+              <label class="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
+                封面图 URL
+              </label>
+              <div class="flex gap-2">
+                <input 
+                  v-model="coverUrl" 
+                  type="text" 
+                  placeholder="https://example.com/image.jpg"
+                  class="flex-1 px-3 py-2 bg-white border border-gray-300 rounded text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all font-mono text-text-main"
+                >
+              </div>
+              <p class="text-[10px] text-text-light mt-2 leading-relaxed">
+                设置文章在首页显示的封面图片地址。
+              </p>
+            </div>
           </div>
         </div>
       </aside>
@@ -130,6 +147,15 @@
           v-model="editorContent"
         />
       </main>
+
+      <!-- 结果弹窗 -->
+      <ResultModal
+        :show="resultModal.show"
+        :type="resultModal.type"
+        :title="resultModal.title"
+        :message="resultModal.message"
+        @close="resultModal.show = false"
+      />
 
       <!-- 冲突解决模态框 -->
       <div v-if="showConflictModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -231,11 +257,13 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { getFileContent, putFile, toBase64Utf8 } from '@/utils/github-client'
+import { parseFrontmatter, stringifyFrontmatter } from '@/utils/frontmatter'
 import { GITHUB_CONFIG } from '@/consts'
 import { toast } from 'vue-sonner'
 import { marked } from 'marked'
 import { ArrowLeft, Save, Loader2, HelpCircle, X, Copy, BookOpen, PanelLeftClose, PanelLeftOpen, Settings, Image as ImageIcon } from 'lucide-vue-next'
 import MonacoEditor from '@/components/MonacoEditor.vue'
+import ResultModal from '@/components/ResultModal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -244,11 +272,19 @@ const { getAuthToken } = useAuth()
 const isNewPost = computed(() => !route.params.filename)
 const editorTitle = ref('')
 const editorContent = ref('')
+const coverUrl = ref('')
 const saving = ref(false)
 const showTips = ref(false)
 const isSidebarOpen = ref(true)
 const monacoRef = ref(null)
 const fileInput = ref(null)
+
+const resultModal = ref({
+  show: false,
+  type: 'success',
+  title: '',
+  message: ''
+})
 
 // 本地缓存相关状态
 const hasLocalChanges = ref(false)
@@ -323,7 +359,12 @@ const handleImageUpload = async (event) => {
   event.target.value = ''
 
   if (file.size > 5 * 1024 * 1024) {
-    toast.error('图片大小不能超过 5MB')
+    resultModal.value = {
+      show: true,
+      type: 'error',
+      title: '上传失败',
+      message: '图片大小不能超过 5MB'
+    }
     return
   }
 
@@ -349,7 +390,6 @@ const handleImageUpload = async (event) => {
         )
 
         // 构建图片 URL (使用 raw.githubusercontent.com 或相对路径)
-        // 这里假设是公共仓库，使用 raw 链接
         const imageUrl = `https://raw.githubusercontent.com/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}/${GITHUB_CONFIG.BRANCH || 'main'}/${filename}`
         
         // 插入 Markdown
@@ -357,10 +397,20 @@ const handleImageUpload = async (event) => {
           monacoRef.value.insertText(`![${file.name}](${imageUrl})`)
         }
         
-        toast.success('图片上传成功')
+        resultModal.value = {
+          show: true,
+          type: 'success',
+          title: '上传成功',
+          message: '图片已成功上传并插入到编辑器中。'
+        }
       } catch (err) {
         console.error(err)
-        toast.error('上传失败: ' + err.message)
+        resultModal.value = {
+          show: true,
+          type: 'error',
+          title: '上传失败',
+          message: '上传图片时发生错误：\n' + err.message
+        }
       } finally {
         toast.dismiss(loadingToast)
       }
@@ -368,16 +418,25 @@ const handleImageUpload = async (event) => {
     reader.readAsDataURL(file)
   } catch (err) {
     toast.dismiss(loadingToast)
-    toast.error('读取文件失败')
+    resultModal.value = {
+      show: true,
+      type: 'error',
+      title: '读取失败',
+      message: '读取本地文件失败：\n' + err.message
+    }
   }
 }
 
 // 自动保存草稿
-watch(editorContent, (newVal) => {
+watch([editorContent, coverUrl], ([newContent, newCover]) => {
   if (!editorTitle.value) return
   const key = `draft_${editorTitle.value}`
-  if (newVal) {
-    localStorage.setItem(key, newVal)
+  
+  // 保存包含 Frontmatter 的完整内容
+  const fullContent = stringifyFrontmatter(newContent, { cover: newCover })
+  
+  if (fullContent) {
+    localStorage.setItem(key, fullContent)
     hasLocalChanges.value = true
   } else {
     localStorage.removeItem(key)
@@ -400,7 +459,9 @@ const loadPost = async () => {
     // 检查是否有未保存的新建草稿
     const draft = localStorage.getItem('draft_new_post')
     if (draft) {
-      editorContent.value = draft
+      const { data, content } = parseFrontmatter(draft)
+      editorContent.value = content
+      coverUrl.value = data.cover || ''
       hasLocalChanges.value = true
       toast.info('已恢复未保存的草稿')
     } else {
@@ -416,16 +477,22 @@ const loadPost = async () => {
   try {
     const loadingToast = toast.loading('正在加载文章...')
     const token = await getAuthToken()
-    const content = await getFileContent(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, `posts/${filename}`)
-    remoteContent.value = content
+    const rawContent = await getFileContent(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, `posts/${filename}`)
+    remoteContent.value = rawContent
+    
+    const { data, content } = parseFrontmatter(rawContent)
     
     // 检查本地草稿
     const draft = localStorage.getItem(draftKey)
-    if (draft && draft !== content) {
+    if (draft && draft !== rawContent) {
       localDraftContent.value = draft
       showConflictModal.value = true
+      // 暂时先显示远程内容，等待用户选择
+      editorContent.value = content
+      coverUrl.value = data.cover || ''
     } else {
       editorContent.value = content
+      coverUrl.value = data.cover || ''
     }
     
     toast.dismiss(loadingToast)
@@ -434,7 +501,9 @@ const loadPost = async () => {
     // 即使远程加载失败，如果本地有草稿也尝试显示
     const draft = localStorage.getItem(draftKey)
     if (draft) {
-      editorContent.value = draft
+      const { data, content } = parseFrontmatter(draft)
+      editorContent.value = content
+      coverUrl.value = data.cover || ''
       toast.info('已加载本地缓存版本')
     } else {
       router.push('/admin')
@@ -444,14 +513,18 @@ const loadPost = async () => {
 
 // 使用本地版本
 const useLocalVersion = () => {
-  editorContent.value = localDraftContent.value
+  const { data, content } = parseFrontmatter(localDraftContent.value)
+  editorContent.value = content
+  coverUrl.value = data.cover || ''
   showConflictModal.value = false
   toast.success('已恢复本地草稿')
 }
 
 // 使用远程版本
 const useRemoteVersion = () => {
-  editorContent.value = remoteContent.value
+  const { data, content } = parseFrontmatter(remoteContent.value)
+  editorContent.value = content
+  coverUrl.value = data.cover || ''
   // 清除本地旧草稿
   localStorage.removeItem(`draft_${editorTitle.value}`)
   hasLocalChanges.value = false
@@ -472,7 +545,10 @@ const handleSavePost = async () => {
     const token = await getAuthToken()
     const filename = editorTitle.value.trim().endsWith('.md') ? editorTitle.value.trim() : `${editorTitle.value.trim()}.md`
     const path = `posts/${filename}`
-    const contentBase64 = toBase64Utf8(editorContent.value)
+    
+    // 组合 Frontmatter 和正文
+    const fullContent = stringifyFrontmatter(editorContent.value, { cover: coverUrl.value })
+    const contentBase64 = toBase64Utf8(fullContent)
     
     const message = isNewPost.value ? `Create post ${filename}` : `Update post ${filename}`
     
@@ -483,14 +559,26 @@ const handleSavePost = async () => {
     if (isNewPost.value) localStorage.removeItem('draft_new_post')
     hasLocalChanges.value = false
     
-    toast.success('发布成功')
+    resultModal.value = {
+      show: true,
+      type: 'success',
+      title: '发布成功',
+      message: `文章 "${filename}" 已成功发布到博客。`
+    }
     
     // 如果是新建，保存后跳转到编辑模式或列表页
     if (isNewPost.value) {
-      router.push('/admin')
+      setTimeout(() => {
+         router.push('/admin')
+      }, 1500)
     }
   } catch (e) {
-    toast.error('发布失败: ' + e.message)
+    resultModal.value = {
+      show: true,
+      type: 'error',
+      title: '发布失败',
+      message: '发布文章时发生错误：\n' + e.message
+    }
   } finally {
     saving.value = false
   }
