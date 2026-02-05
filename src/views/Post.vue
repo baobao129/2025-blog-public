@@ -3,30 +3,30 @@
     <!-- 加载状态 -->
     <div v-if="loading" class="flex flex-col items-center py-20 space-y-4">
       <div class="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-      <p class="text-text-light text-sm animate-pulse">Loading story...</p>
+      <p class="text-text-light text-sm animate-pulse">正在加载文章...</p>
     </div>
 
     <!-- 错误提示 -->
     <div v-else-if="error" class="bg-red-50 border border-red-100 text-red-700 p-6 rounded-xl text-center my-12">
       {{ error }}
       <div class="mt-4">
-        <router-link to="/" class="text-primary hover:text-accent underline transition-colors">Return home</router-link>
+        <router-link to="/" class="text-primary hover:text-accent underline transition-colors">返回首页</router-link>
       </div>
     </div>
 
     <div v-else class="animate-fade-in-up">
       <!-- 导航栏 -->
       <nav class="mb-12 flex items-center gap-2 text-sm text-text-light">
-        <router-link to="/" class="hover:text-primary transition-colors">Home</router-link>
+        <router-link to="/" class="hover:text-primary transition-colors">首页</router-link>
         <span>/</span>
         <span class="text-text-muted truncate">{{ route.params.filename.replace('.md', '') }}</span>
       </nav>
 
       <!-- 文章头部 -->
       <header class="mb-12 text-center">
-        <div class="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full text-xs font-medium text-text-muted mb-6">
+        <div class="inline-flex items-center gap-2 px-3 py-1 bg-gray-50 rounded-full text-xs font-medium text-text-muted mb-6 border border-gray-100">
           <Calendar class="w-3 h-3" />
-          <span>{{ new Date().toLocaleDateString() }}</span>
+          <span>{{ new Date().toLocaleDateString('zh-CN') }}</span>
         </div>
         <h1 class="text-4xl md:text-5xl font-serif font-bold text-primary mb-6 leading-tight">
           {{ formatTitle(route.params.filename) }}
@@ -34,18 +34,18 @@
         <div class="flex items-center justify-center gap-4 text-sm text-text-muted">
           <div class="flex items-center gap-1">
             <User class="w-4 h-4" />
-            <span>Author</span>
+            <span>作者</span>
           </div>
           <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
           <div class="flex items-center gap-1">
             <Clock class="w-4 h-4" />
-            <span>{{ readingTime }} min read</span>
+            <span>约 {{ readingTime }} 分钟阅读</span>
           </div>
         </div>
       </header>
 
       <!-- 文章内容 -->
-      <article class="prose prose-lg prose-zinc mx-auto pb-20">
+      <article class="prose prose-lg prose-zinc mx-auto pb-20 prose-headings:font-serif prose-headings:font-bold prose-p:text-justify prose-img:rounded-xl prose-img:shadow-md">
         <div v-html="contentHtml"></div>
       </article>
 
@@ -53,13 +53,13 @@
       <div class="border-t border-gray-100 pt-12 mt-12 flex justify-between">
         <router-link to="/" class="group flex items-center gap-2 text-text-muted hover:text-primary transition-colors">
           <ArrowLeft class="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          <span>Back to Home</span>
+          <span>返回首页</span>
         </router-link>
         <button 
           @click="window.scrollTo({ top: 0, behavior: 'smooth' })" 
           class="text-text-muted hover:text-primary transition-colors"
         >
-          Top &uarr;
+          回到顶部 &uarr;
         </button>
       </div>
     </div>

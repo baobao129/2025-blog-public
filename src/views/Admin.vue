@@ -1,19 +1,19 @@
 <template>
   <div class="max-w-5xl mx-auto space-y-12">
     <div class="flex items-center justify-between">
-      <h1 class="text-3xl font-serif font-bold text-primary">Content Management</h1>
+      <h1 class="text-3xl font-serif font-bold text-primary">内容管理</h1>
       
       <!-- 状态指示 -->
       <div v-if="isAuth" class="flex items-center gap-3">
         <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-full border border-green-100">
           <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
-          Connected to GitHub
+          已连接 GitHub
         </span>
         <button 
           @click="clearAuth" 
           class="text-sm text-text-light hover:text-red-600 transition-colors"
         >
-          Disconnect
+          断开连接
         </button>
       </div>
     </div>
@@ -23,16 +23,16 @@
       <div class="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-text-muted">
         <KeyRound class="w-8 h-8" />
       </div>
-      <h2 class="text-2xl font-bold text-primary mb-3">Authentication Required</h2>
+      <h2 class="text-2xl font-bold text-primary mb-3">需要身份验证</h2>
       <p class="text-text-muted mb-8 max-w-md mx-auto">
-        Please upload your GitHub App private key (.pem) to access the content management system.
+        请上传您的 GitHub App 私钥 (.pem) 以访问管理系统。
       </p>
       
       <div class="flex flex-col items-center gap-4">
         <label class="relative cursor-pointer group">
           <div class="px-6 py-3 bg-primary text-white rounded-lg font-medium shadow-lg shadow-primary/20 group-hover:shadow-primary/30 group-hover:-translate-y-0.5 transition-all flex items-center gap-2">
             <Upload class="w-4 h-4" />
-            <span>Upload Private Key</span>
+            <span>上传私钥文件</span>
           </div>
           <input 
             type="file" 
@@ -50,14 +50,14 @@
       <!-- 操作栏 -->
       <div class="flex justify-between items-center bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
         <div class="flex items-center gap-4 text-sm text-text-muted">
-          <span class="font-medium text-primary">{{ posts.length }}</span> posts found
+          共找到 <span class="font-medium text-primary">{{ posts.length }}</span> 篇文章
         </div>
         <button 
           @click="startNewPost"
           class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors flex items-center gap-2"
         >
           <Plus class="w-4 h-4" />
-          New Post
+          新建文章
         </button>
       </div>
 
@@ -70,13 +70,13 @@
               <X class="w-5 h-5" />
             </button>
             <div class="h-6 w-px bg-gray-200"></div>
-            <span class="font-medium text-text-muted">{{ currentPost ? 'Editing Post' : 'New Post' }}</span>
+            <span class="font-medium text-text-muted">{{ currentPost ? '编辑文章' : '新建文章' }}</span>
           </div>
 
           <div class="flex items-center gap-4">
             <span v-if="saving" class="text-sm text-text-light flex items-center gap-2">
               <Loader2 class="w-3 h-3 animate-spin" />
-              Saving...
+              保存中...
             </span>
             <button 
               @click="handleSavePost"
@@ -84,7 +84,7 @@
               class="px-6 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover disabled:opacity-50 transition-colors flex items-center gap-2"
             >
               <Save class="w-4 h-4" />
-              Publish
+              发布
             </button>
           </div>
         </header>
@@ -95,7 +95,7 @@
           <aside class="w-80 border-r border-gray-100 bg-gray-50/50 p-6 overflow-y-auto">
             <div class="space-y-6">
               <div>
-                <label class="block text-xs font-semibold text-text-light uppercase tracking-wider mb-2">Filename</label>
+                <label class="block text-xs font-semibold text-text-light uppercase tracking-wider mb-2">文件名 (Slug)</label>
                 <input 
                   v-model="editorTitle" 
                   type="text" 
@@ -103,7 +103,7 @@
                   class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-mono"
                   :disabled="!!currentPost"
                 >
-                <p class="text-[10px] text-text-light mt-1.5">Used as the URL slug. Cannot be changed after creation.</p>
+                <p class="text-[10px] text-text-light mt-1.5">作为 URL 的一部分。创建后无法修改。</p>
               </div>
               
               <!-- 可以在这里添加 Frontmatter 字段 (Title, Date, Tags) -->
@@ -114,12 +114,10 @@
           <div class="flex-1 flex flex-col">
             <textarea 
               v-model="editorContent" 
-              placeholder="Write your story here..."
+              placeholder="在此开始写作..."
               class="flex-grow w-full p-8 resize-none focus:outline-none font-mono text-sm leading-relaxed text-text-main placeholder:text-gray-300"
             ></textarea>
           </div>
-
-          <!-- 预览区 (可选，这里简化为纯输入，因为我们有 Post 页预览) -->
         </div>
       </div>
 
@@ -128,17 +126,17 @@
         <table class="w-full text-left border-collapse">
           <thead>
             <tr class="bg-gray-50/50 border-b border-gray-100 text-xs font-semibold text-text-light uppercase tracking-wider">
-              <th class="px-6 py-4">Title / Filename</th>
-              <th class="px-6 py-4">Size</th>
-              <th class="px-6 py-4 text-right">Actions</th>
+              <th class="px-6 py-4">标题 / 文件名</th>
+              <th class="px-6 py-4">大小</th>
+              <th class="px-6 py-4 text-right">操作</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-50">
             <tr v-if="loading" class="text-center">
-              <td colspan="3" class="px-6 py-12 text-text-light">Loading posts...</td>
+              <td colspan="3" class="px-6 py-12 text-text-light">正在加载文章列表...</td>
             </tr>
             <tr v-else-if="posts.length === 0" class="text-center">
-              <td colspan="3" class="px-6 py-12 text-text-light">No posts yet. Create your first one!</td>
+              <td colspan="3" class="px-6 py-12 text-text-light">暂无文章。点击右上角新建第一篇！</td>
             </tr>
             <tr 
               v-for="post in posts" 
@@ -158,21 +156,21 @@
                     :href="post.html_url" 
                     target="_blank" 
                     class="p-2 text-text-light hover:text-primary hover:bg-gray-100 rounded-lg transition-colors"
-                    title="View on GitHub"
+                    title="在 GitHub 查看"
                   >
                     <Github class="w-4 h-4" />
                   </a>
                   <button 
                     @click="handleEdit(post)"
                     class="p-2 text-text-light hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                    title="Edit"
+                    title="编辑"
                   >
                     <Edit2 class="w-4 h-4" />
                   </button>
                   <button 
                     @click="handleDelete(post)"
                     class="p-2 text-text-light hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Delete"
+                    title="删除"
                   >
                     <Trash2 class="w-4 h-4" />
                   </button>

@@ -7,25 +7,25 @@ export default {
   theme: {
     extend: {
       fontFamily: {
+        // 思源黑体优先，回退到系统字体
         sans: [
-          '"Inter"', 
-          'ui-sans-serif', 
-          'system-ui', 
-          '-apple-system', 
-          'BlinkMacSystemFont', 
-          '"Segoe UI"', 
-          'Roboto', 
-          '"Helvetica Neue"', 
-          'Arial', 
+          '"Noto Sans SC"',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          '"Segoe UI"',
+          'Roboto',
+          '"Helvetica Neue"',
+          'Arial',
           'sans-serif'
         ],
+        // 思源宋体优先
         serif: [
-          '"Merriweather"', 
-          'ui-serif', 
-          'Georgia', 
-          'Cambria', 
-          '"Times New Roman"', 
-          'Times', 
+          '"Noto Serif SC"',
+          'ui-serif',
+          'Georgia',
+          'Cambria',
+          '"Times New Roman"',
+          'Times',
           'serif'
         ],
         mono: [
@@ -41,20 +41,20 @@ export default {
         ]
       },
       colors: {
-        background: '#FAF9F6', // Off-white / Eggshell
+        background: '#fdfbf7', // 米宣纸色
         surface: '#FFFFFF',
         primary: {
-          DEFAULT: '#18181B', // Zinc 900
-          hover: '#27272A',   // Zinc 800
+          DEFAULT: '#2c2c2c', // 墨色
+          hover: '#000000',
         },
         accent: {
-          DEFAULT: '#E17055', // Terracotta
-          light: '#FAB1A0',
+          DEFAULT: '#c0392b', // 朱砂红
+          light: '#e74c3c',
         },
         text: {
-          main: '#27272A',    // Zinc 800
-          muted: '#71717A',   // Zinc 500
-          light: '#A1A1AA',   // Zinc 400
+          main: '#2c2c2c',    // 墨色
+          muted: '#666666',   // 深灰
+          light: '#999999',   // 浅灰
         }
       },
       typography: (theme) => ({
@@ -65,38 +65,48 @@ export default {
             h1: {
               fontFamily: theme('fontFamily.serif'),
               fontWeight: '700',
+              color: theme('colors.primary.DEFAULT'),
             },
             h2: {
               fontFamily: theme('fontFamily.serif'),
               fontWeight: '600',
               marginTop: '2em',
+              color: theme('colors.primary.DEFAULT'),
             },
             h3: {
               fontFamily: theme('fontFamily.serif'),
               fontWeight: '600',
+              color: theme('colors.primary.DEFAULT'),
             },
-            'code::before': {
-              content: '""',
-            },
-            'code::after': {
-              content: '""',
-            },
+            'code::before': { content: '""' },
+            'code::after': { content: '""' },
             code: {
-              backgroundColor: '#F4F4F5', // Zinc 100
+              backgroundColor: '#f5f5f5',
               padding: '0.2em 0.4em',
               borderRadius: '0.25rem',
               fontWeight: '500',
-              color: '#E17055', // Terracotta
+              color: '#c0392b',
+              fontFamily: theme('fontFamily.mono'),
             },
             pre: {
-              backgroundColor: '#18181B', // Zinc 900
-              color: '#F4F4F5', // Zinc 100
+              backgroundColor: '#2c2c2c',
+              color: '#fdfbf7',
             },
             blockquote: {
-              borderLeftColor: '#E17055', // Terracotta
-              fontStyle: 'italic',
+              borderLeftColor: '#c0392b',
+              fontStyle: 'normal',
               color: theme('colors.text.muted'),
-            }
+              backgroundColor: '#f9f9f9',
+              padding: '0.5rem 1rem',
+              borderRadius: '0.25rem',
+            },
+            a: {
+              color: '#c0392b',
+              textDecoration: 'none',
+              '&:hover': {
+                textDecoration: 'underline',
+              },
+            },
           }
         }
       })
