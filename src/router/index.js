@@ -23,12 +23,14 @@ const routes = [
   {
     path: '/editor',
     name: 'NewPost',
-    component: Editor
+    component: Editor,
+    meta: { layout: 'fullscreen' }
   },
   {
     path: '/editor/:filename',
     name: 'EditPost',
-    component: Editor
+    component: Editor,
+    meta: { layout: 'fullscreen' }
   }
 ]
 

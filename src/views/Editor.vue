@@ -21,6 +21,22 @@
 
       <div class="flex items-center gap-4">
         <button
+          @click="triggerImageUpload"
+          class="text-text-muted hover:text-accent transition-colors flex items-center gap-2 text-sm"
+          title="插入图片"
+        >
+          <ImageIcon class="w-4 h-4" />
+          <span class="hidden sm:inline">插入图片</span>
+        </button>
+        <input 
+          type="file" 
+          ref="fileInput" 
+          class="hidden" 
+          accept="image/*"
+          @change="handleImageUpload"
+        >
+
+        <button
           @click="showTips = !showTips"
           class="text-text-muted hover:text-accent transition-colors flex items-center gap-2 text-sm"
           :class="{ 'text-accent': showTips }"
@@ -218,7 +234,7 @@ import { getFileContent, putFile, toBase64Utf8 } from '@/utils/github-client'
 import { GITHUB_CONFIG } from '@/consts'
 import { toast } from 'vue-sonner'
 import { marked } from 'marked'
-import { ArrowLeft, Save, Loader2, HelpCircle, X, Copy, BookOpen, PanelLeftClose, PanelLeftOpen, Settings } from 'lucide-vue-next'
+import { ArrowLeft, Save, Loader2, HelpCircle, X, Copy, BookOpen, PanelLeftClose, PanelLeftOpen, Settings, Image as ImageIcon } from 'lucide-vue-next'
 import MonacoEditor from '@/components/MonacoEditor.vue'
 
 const route = useRoute()
@@ -232,6 +248,7 @@ const saving = ref(false)
 const showTips = ref(false)
 const isSidebarOpen = ref(true)
 const monacoRef = ref(null)
+const fileInput = ref(null)
 
 // 本地缓存相关状态
 const hasLocalChanges = ref(false)
@@ -289,6 +306,69 @@ const insertText = (text) => {
   if (monacoRef.value) {
     monacoRef.value.insertText(text)
     toast.success('已插入代码')
+  }
+}
+
+// 触发图片上传
+const triggerImageUpload = () => {
+  fileInput.value.click()
+}
+
+// 处理图片上传
+const handleImageUpload = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  // 重置 input 以便允许重复选择同一文件
+  event.target.value = ''
+
+  if (file.size > 5 * 1024 * 1024) {
+    toast.error('图片大小不能超过 5MB')
+    return
+  }
+
+  const loadingToast = toast.loading('正在上传图片...')
+  
+  try {
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      try {
+        const contentBase64 = e.target.result.split(',')[1]
+        const ext = file.name.split('.').pop()
+        const filename = `images/${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`
+        const token = await getAuthToken()
+        
+        await putFile(
+          token, 
+          GITHUB_CONFIG.OWNER, 
+          GITHUB_CONFIG.REPO, 
+          filename, 
+          contentBase64, 
+          `Upload image ${filename}`, 
+          GITHUB_CONFIG.BRANCH || 'main'
+        )
+
+        // 构建图片 URL (使用 raw.githubusercontent.com 或相对路径)
+        // 这里假设是公共仓库，使用 raw 链接
+        const imageUrl = `https://raw.githubusercontent.com/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}/${GITHUB_CONFIG.BRANCH || 'main'}/${filename}`
+        
+        // 插入 Markdown
+        if (monacoRef.value) {
+          monacoRef.value.insertText(`![${file.name}](${imageUrl})`)
+        }
+        
+        toast.success('图片上传成功')
+      } catch (err) {
+        console.error(err)
+        toast.error('上传失败: ' + err.message)
+      } finally {
+        toast.dismiss(loadingToast)
+      }
+    }
+    reader.readAsDataURL(file)
+  } catch (err) {
+    toast.dismiss(loadingToast)
+    toast.error('读取文件失败')
   }
 }
 

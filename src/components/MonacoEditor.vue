@@ -37,8 +37,9 @@ const initMonaco = () => {
     scrollBeyondLastLine: false,
     autoClosingBrackets: 'always', // 自动闭合括号
     autoClosingQuotes: 'always',
+    quickSuggestions: true,
     suggest: {
-      showWords: false // 禁用单词补全，避免干扰写作
+      showWords: true
     }
   })
 
