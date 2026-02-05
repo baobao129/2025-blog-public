@@ -7,106 +7,139 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        // 思源黑体优先，回退到系统字体
-        sans: [
-          '"Noto Sans SC"',
-          '-apple-system',
-          'BlinkMacSystemFont',
-          '"Segoe UI"',
-          'Roboto',
-          '"Helvetica Neue"',
-          'Arial',
-          'sans-serif'
-        ],
-        // 思源宋体优先
-        serif: [
-          '"Noto Serif SC"',
-          'ui-serif',
-          'Georgia',
-          'Cambria',
-          '"Times New Roman"',
-          'Times',
-          'serif'
-        ],
-        mono: [
-          '"JetBrains Mono"', 
-          'ui-monospace', 
-          'SFMono-Regular', 
-          'Menlo', 
-          'Monaco', 
-          'Consolas', 
-          '"Liberation Mono"', 
-          '"Courier New"', 
-          'monospace'
-        ]
+        sans: ['"Noto Sans SC"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        serif: ['"Noto Serif SC"', 'serif'],
+        mono: ['"JetBrains Mono"', 'monospace']
       },
       colors: {
-        background: '#fdfbf7', // 米宣纸色
+        background: '#fdfbf7',
         surface: '#FFFFFF',
-        primary: {
-          DEFAULT: '#2c2c2c', // 墨色
-          hover: '#000000',
-        },
-        accent: {
-          DEFAULT: '#c0392b', // 朱砂红
-          light: '#e74c3c',
-        },
-        text: {
-          main: '#2c2c2c',    // 墨色
-          muted: '#666666',   // 深灰
-          light: '#999999',   // 浅灰
-        }
+        primary: { DEFAULT: '#2c2c2c', hover: '#000000' },
+        accent: { DEFAULT: '#c0392b', light: '#e74c3c' },
+        text: { main: '#2c2c2c', muted: '#666666', light: '#999999' }
       },
       typography: (theme) => ({
         DEFAULT: {
           css: {
             color: theme('colors.text.main'),
             maxWidth: 'none',
+            lineHeight: '1.8',
+            
+            // 标题优化
             h1: {
               fontFamily: theme('fontFamily.serif'),
               fontWeight: '700',
               color: theme('colors.primary.DEFAULT'),
+              fontSize: '2.25em',
+              marginTop: '0',
+              marginBottom: '0.8em',
+              lineHeight: '1.2',
             },
             h2: {
               fontFamily: theme('fontFamily.serif'),
               fontWeight: '600',
-              marginTop: '2em',
               color: theme('colors.primary.DEFAULT'),
+              fontSize: '1.75em',
+              marginTop: '2em',
+              marginBottom: '0.6em',
+              borderBottom: '1px solid #e5e5e5',
+              paddingBottom: '0.3em',
             },
             h3: {
               fontFamily: theme('fontFamily.serif'),
               fontWeight: '600',
               color: theme('colors.primary.DEFAULT'),
+              fontSize: '1.375em',
+              marginTop: '1.6em',
+              marginBottom: '0.6em',
             },
-            'code::before': { content: '""' },
-            'code::after': { content: '""' },
-            code: {
+            h4: {
+              fontWeight: '600',
+              marginTop: '1.5em',
+              marginBottom: '0.5em',
+            },
+
+            // 引用块优化
+            blockquote: {
+              fontWeight: '400',
+              fontStyle: 'normal',
+              color: theme('colors.text.muted'),
+              borderLeftWidth: '4px',
+              borderLeftColor: theme('colors.accent.DEFAULT'),
               backgroundColor: '#f5f5f5',
+              padding: '1rem 1.5rem',
+              borderRadius: '0.5rem',
+              quotes: 'none',
+              marginTop: '1.6em',
+              marginBottom: '1.6em',
+            },
+
+            // 代码块优化
+            pre: {
+              backgroundColor: '#282c34',
+              color: '#abb2bf',
+              borderRadius: '0.75rem',
+              padding: '1.25rem',
+              marginTop: '1.6em',
+              marginBottom: '1.6em',
+              fontSize: '0.9em',
+              lineHeight: '1.7',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+            },
+            code: {
+              backgroundColor: 'rgba(192, 57, 43, 0.1)',
+              color: theme('colors.accent.DEFAULT'),
               padding: '0.2em 0.4em',
               borderRadius: '0.25rem',
               fontWeight: '500',
-              color: '#c0392b',
-              fontFamily: theme('fontFamily.mono'),
+              fontSize: '0.9em',
             },
-            pre: {
-              backgroundColor: '#2c2c2c',
-              color: '#fdfbf7',
+            'pre code': {
+              backgroundColor: 'transparent',
+              color: 'inherit',
+              padding: '0',
+              fontSize: '1em',
             },
-            blockquote: {
-              borderLeftColor: '#c0392b',
-              fontStyle: 'normal',
-              color: theme('colors.text.muted'),
-              backgroundColor: '#f9f9f9',
-              padding: '0.5rem 1rem',
-              borderRadius: '0.25rem',
-            },
+
+            // 链接
             a: {
-              color: '#c0392b',
+              color: theme('colors.accent.DEFAULT'),
               textDecoration: 'none',
+              fontWeight: '500',
+              borderBottom: '1px solid transparent',
+              transition: 'border-color 0.2s',
               '&:hover': {
-                textDecoration: 'underline',
+                borderBottomColor: theme('colors.accent.DEFAULT'),
               },
             },
+
+            // 列表
+            'ul > li': {
+              position: 'relative',
+              paddingLeft: '1.5em',
+            },
+            'ul > li::marker': {
+              color: theme('colors.accent.light'),
+            },
+
+            // 图像
+            img: {
+              borderRadius: '0.75rem',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              marginTop: '2em',
+              marginBottom: '2em',
+            },
+
+            // 特殊标签支持
+            small: {
+              fontSize: '0.8em',
+              color: theme('colors.text.muted'),
+            },
+            mark: {
+              backgroundColor: '#fef3c7',
+              padding: '0.1em 0.3em',
+              borderRadius: '0.2em',
+            }
           }
         }
       })

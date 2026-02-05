@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.19",
+    "highlight.js": "^11.11.1",
     "jsrsasign": "^11.1.0",
     "lucide-vue-next": "^0.563.0",
     "marked": "^17.0.1",
