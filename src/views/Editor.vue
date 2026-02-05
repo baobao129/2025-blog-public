@@ -14,6 +14,9 @@
         <span class="font-serif font-bold text-lg text-primary">
           {{ isNewPost ? '新建文章' : '编辑文章' }}
         </span>
+        <span v-if="hasLocalChanges" class="text-xs text-accent font-medium px-2 py-0.5 bg-accent/10 rounded-full">
+          有未保存的本地草稿
+        </span>
       </div>
 
       <div class="flex items-center gap-4">
@@ -75,6 +78,54 @@
         ></textarea>
       </main>
 
+      <!-- 冲突解决模态框 -->
+      <div v-if="showConflictModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+          <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+            <h3 class="font-serif font-bold text-xl text-primary">发现未保存的草稿</h3>
+            <button @click="useRemoteVersion" class="text-text-light hover:text-primary">
+              <X class="w-5 h-5" />
+            </button>
+          </div>
+          
+          <div class="flex-1 overflow-hidden grid grid-cols-2 divide-x divide-gray-200">
+            <!-- 本地版本 -->
+            <div class="flex flex-col overflow-hidden bg-yellow-50/30">
+              <div class="p-3 bg-yellow-100/50 text-xs font-bold text-yellow-800 uppercase tracking-wider flex justify-between items-center">
+                <span>本地草稿 (Local Draft)</span>
+                <span class="font-mono opacity-70">{{ new Date().toLocaleTimeString() }}</span>
+              </div>
+              <div class="flex-1 p-4 overflow-y-auto font-mono text-xs whitespace-pre-wrap">{{ localDraftContent }}</div>
+              <div class="p-4 border-t border-yellow-100">
+                <button 
+                  @click="useLocalVersion"
+                  class="w-full py-2 bg-yellow-600 text-white rounded font-medium hover:bg-yellow-700 transition-colors shadow-sm"
+                >
+                  恢复本地草稿
+                </button>
+              </div>
+            </div>
+
+            <!-- 远程版本 -->
+            <div class="flex flex-col overflow-hidden bg-blue-50/30">
+              <div class="p-3 bg-blue-100/50 text-xs font-bold text-blue-800 uppercase tracking-wider flex justify-between items-center">
+                <span>远程版本 (GitHub)</span>
+                <span class="font-mono opacity-70">Latest</span>
+              </div>
+              <div class="flex-1 p-4 overflow-y-auto font-mono text-xs whitespace-pre-wrap">{{ remoteContent }}</div>
+              <div class="p-4 border-t border-blue-100">
+                <button 
+                  @click="useRemoteVersion"
+                  class="w-full py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition-colors shadow-sm"
+                >
+                  使用远程版本
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Markdown 语法提示抽屉 -->
       <Transition name="slide-fade">
         <aside v-if="showTips" class="w-96 border-l border-gray-200 bg-white flex-shrink-0 overflow-y-auto absolute right-0 top-0 bottom-0 shadow-2xl z-20 flex flex-col">
@@ -123,7 +174,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { getFileContent, putFile, toBase64Utf8 } from '@/utils/github-client'
@@ -142,6 +193,12 @@ const editorContent = ref('')
 const saving = ref(false)
 const showTips = ref(false)
 const textareaRef = ref(null)
+
+// 本地缓存相关状态
+const hasLocalChanges = ref(false)
+const showConflictModal = ref(false)
+const localDraftContent = ref('')
+const remoteContent = ref('')
 
 // Markdown 语法数据
 const markdownRules = [
@@ -209,26 +266,91 @@ const insertText = (text) => {
   toast.success('已插入代码')
 }
 
+// 自动保存草稿
+watch(editorContent, (newVal) => {
+  if (!editorTitle.value) return
+  const key = `draft_${editorTitle.value}`
+  if (newVal) {
+    localStorage.setItem(key, newVal)
+    hasLocalChanges.value = true
+  } else {
+    localStorage.removeItem(key)
+    hasLocalChanges.value = false
+  }
+})
+
+// 监听标题变化，更新缓存 Key
+watch(editorTitle, (newVal, oldVal) => {
+  if (oldVal && localStorage.getItem(`draft_${oldVal}`)) {
+    const content = localStorage.getItem(`draft_${oldVal}`)
+    localStorage.removeItem(`draft_${oldVal}`)
+    if (newVal) localStorage.setItem(`draft_${newVal}`, content)
+  }
+})
+
 // 加载文章内容 (如果是编辑模式)
 const loadPost = async () => {
   if (isNewPost.value) {
-    editorContent.value = '# 新文章\n\n开始写作...'
+    // 检查是否有未保存的新建草稿
+    const draft = localStorage.getItem('draft_new_post')
+    if (draft) {
+      editorContent.value = draft
+      hasLocalChanges.value = true
+      toast.info('已恢复未保存的草稿')
+    } else {
+      editorContent.value = '# 新文章\n\n开始写作...'
+    }
     return
   }
 
   const filename = route.params.filename
   editorTitle.value = filename.replace('.md', '')
+  const draftKey = `draft_${editorTitle.value}`
   
   try {
     const loadingToast = toast.loading('正在加载文章...')
     const token = await getAuthToken()
     const content = await getFileContent(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, `posts/${filename}`)
-    editorContent.value = content
+    remoteContent.value = content
+    
+    // 检查本地草稿
+    const draft = localStorage.getItem(draftKey)
+    if (draft && draft !== content) {
+      localDraftContent.value = draft
+      showConflictModal.value = true
+    } else {
+      editorContent.value = content
+    }
+    
     toast.dismiss(loadingToast)
   } catch (e) {
     toast.error('无法加载文章: ' + e.message)
-    router.push('/admin')
+    // 即使远程加载失败，如果本地有草稿也尝试显示
+    const draft = localStorage.getItem(draftKey)
+    if (draft) {
+      editorContent.value = draft
+      toast.info('已加载本地缓存版本')
+    } else {
+      router.push('/admin')
+    }
   }
+}
+
+// 使用本地版本
+const useLocalVersion = () => {
+  editorContent.value = localDraftContent.value
+  showConflictModal.value = false
+  toast.success('已恢复本地草稿')
+}
+
+// 使用远程版本
+const useRemoteVersion = () => {
+  editorContent.value = remoteContent.value
+  // 清除本地旧草稿
+  localStorage.removeItem(`draft_${editorTitle.value}`)
+  hasLocalChanges.value = false
+  showConflictModal.value = false
+  toast.info('已加载远程版本')
 }
 
 // 保存文章
@@ -249,6 +371,11 @@ const handleSavePost = async () => {
     const message = isNewPost.value ? `Create post ${filename}` : `Update post ${filename}`
     
     await putFile(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, path, contentBase64, message, GITHUB_CONFIG.BRANCH || 'main')
+    
+    // 保存成功后清除本地草稿
+    localStorage.removeItem(`draft_${editorTitle.value}`)
+    if (isNewPost.value) localStorage.removeItem('draft_new_post')
+    hasLocalChanges.value = false
     
     toast.success('发布成功')
     
