@@ -1,69 +1,79 @@
-<script setup>
-import { onMounted } from 'vue'
-import { useAuth } from '@/composables/useAuth'
-
-const { isAuth, privateKey, setPrivateKey, clearAuth, getAuthToken } = useAuth()
-
-const handleLogin = async () => {
-  const key = prompt('请输入 Private Key PEM 内容:')
-  if (key) {
-    await setPrivateKey(key)
-    alert('设置成功！')
-  }
-}
-
-const handleTest = async () => {
-  try {
-    const token = await getAuthToken()
-    alert('获取 Token 成功: ' + token.substring(0, 10) + '...')
-  } catch (e) {
-    alert('错误: ' + e.message)
-  }
-}
-</script>
-
 <template>
-  <div class="p-10 max-w-2xl mx-auto">
-    <h1 class="text-3xl font-bold mb-6">Vue 3 Blog Project</h1>
-    
-    <div class="bg-gray-100 p-6 rounded-lg mb-6">
-      <h2 class="text-xl font-semibold mb-4">GitHub 认证状态</h2>
-      <div class="flex items-center gap-4 mb-4">
-        <span class="font-medium">状态:</span>
-        <span :class="isAuth ? 'text-green-600' : 'text-red-600'">
-          {{ isAuth ? '已认证' : '未认证' }}
-        </span>
-      </div>
-      
-      <div class="flex gap-4">
-        <button 
-          v-if="!isAuth"
-          @click="handleLogin"
-          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          设置 Private Key
-        </button>
-        <button 
-          v-else
-          @click="clearAuth"
-          class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-        >
-          清除认证
-        </button>
+  <div class="min-h-screen flex flex-col font-sans selection:bg-accent-light selection:text-text-main">
+    <!-- 顶部导航栏 -->
+    <nav class="sticky top-0 z-50 w-full border-b border-gray-200/60 bg-white/80 backdrop-blur-md transition-all">
+      <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
+        <!-- Logo -->
+        <router-link to="/" class="group flex items-center gap-2">
+          <div class="w-8 h-8 bg-primary text-white rounded-lg flex items-center justify-center font-serif font-bold text-lg shadow-sm group-hover:bg-accent transition-colors">
+            B
+          </div>
+          <span class="font-serif font-bold text-xl tracking-tight text-primary group-hover:text-accent transition-colors">
+            Blog
+          </span>
+        </router-link>
         
-        <button 
-          v-if="isAuth"
-          @click="handleTest"
-          class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-        >
-          测试获取 Token
-        </button>
+        <!-- 导航链接 -->
+        <div class="flex items-center gap-8 text-sm font-medium">
+          <router-link 
+            to="/" 
+            class="text-text-muted hover:text-primary transition-colors relative py-1 after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-accent after:transition-all hover:after:w-full"
+            active-class="text-primary after:w-full"
+          >
+            首页
+          </router-link>
+          <router-link 
+            to="/admin" 
+            class="text-text-muted hover:text-primary transition-colors relative py-1 after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-accent after:transition-all hover:after:w-full"
+            active-class="text-primary after:w-full"
+          >
+            管理
+          </router-link>
+          <a href="https://github.com" target="_blank" class="text-text-muted hover:text-primary transition-colors">
+            <GithubIcon class="w-5 h-5" />
+          </a>
+        </div>
       </div>
-    </div>
+    </nav>
 
-    <div class="prose">
-      <p>这是一个基础的 Vue 3 + Vite 项目框架。</p>
-      <p>关键的 GitHub App 认证逻辑已经迁移到 <code>src/composables/useAuth.js</code> 和 <code>src/utils</code> 目录中。</p>
-    </div>
+    <!-- 主内容区域 -->
+    <main class="flex-grow w-full max-w-5xl mx-auto px-6 py-12">
+      <router-view v-slot="{ Component }">
+        <Transition name="fade" mode="out-in">
+          <component :is="Component" />
+        </Transition>
+      </router-view>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="border-t border-gray-100 bg-white py-12 mt-auto">
+      <div class="max-w-5xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+        <div class="text-text-muted text-sm font-medium">
+          &copy; {{ new Date().getFullYear() }} My Minimalist Blog.
+        </div>
+        <div class="flex gap-6 text-sm text-text-light">
+          <span class="hover:text-text-muted cursor-pointer transition-colors">Privacy Policy</span>
+          <span class="hover:text-text-muted cursor-pointer transition-colors">Terms of Service</span>
+        </div>
+      </div>
+    </footer>
+
+    <!-- 通知组件 -->
+    <Toaster 
+      position="top-center" 
+      :toastOptions="{
+        style: {
+          background: '#18181B',
+          color: '#FFFFFF',
+          border: 'none',
+          fontFamily: 'Inter, sans-serif'
+        }
+      }"
+    />
   </div>
 </template>
+
+<script setup>
+import { Toaster } from 'vue-sonner'
+import { Github as GithubIcon } from 'lucide-vue-next'
+</script>
