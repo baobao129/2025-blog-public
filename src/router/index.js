@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Home from '@/views/Home.vue'
 import Post from '@/views/Post.vue'
 import Admin from '@/views/Admin.vue'
+import Editor from '@/views/Editor.vue'
 
 const routes = [
   {
@@ -18,6 +19,16 @@ const routes = [
     path: '/admin',
     name: 'Admin',
     component: Admin
+  },
+  {
+    path: '/editor',
+    name: 'NewPost',
+    component: Editor
+  },
+  {
+    path: '/editor/:filename',
+    name: 'EditPost',
+    component: Editor
   }
 ]
 
