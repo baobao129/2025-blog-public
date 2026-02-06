@@ -95,7 +95,9 @@ import { ref, onMounted, nextTick, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { marked } from 'marked'
 import hljs from 'highlight.js'
+import 'highlight.js/styles/atom-one-dark.css'
 import { getFileContent } from '@/utils/github-client'
+import { parseFrontmatter } from '@/utils/frontmatter'
 import { useAuth } from '@/composables/useAuth'
 import { GITHUB_CONFIG } from '@/consts'
 import { Calendar, Clock, User, ArrowLeft } from 'lucide-vue-next'
@@ -201,7 +203,8 @@ const fetchPost = async () => {
       console.log('未登录，尝试以访客模式访问')
     }
 
-    const content = await getFileContent(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, `posts/${filename}`)
+    const rawContent = await getFileContent(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, `posts/${filename}`)
+    const { content } = parseFrontmatter(rawContent)
     readingTime.value = calculateReadingTime(content)
     
     const rawHtml = marked.parse(content)

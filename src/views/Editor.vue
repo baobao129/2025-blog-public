@@ -44,6 +44,19 @@
           <HelpCircle class="w-4 h-4" />
           语法助手
         </button>
+
+        <div class="h-4 w-px bg-gray-300"></div>
+
+        <button
+          @click="isPreviewMode = !isPreviewMode"
+          class="text-text-muted hover:text-accent transition-colors flex items-center gap-2 text-sm"
+          :class="{ 'text-accent': isPreviewMode }"
+          title="切换预览模式"
+        >
+          <component :is="isPreviewMode ? Edit : Eye" class="w-4 h-4" />
+          {{ isPreviewMode ? '编辑模式' : '预览模式' }}
+        </button>
+
         <span v-if="saving" class="text-sm text-text-light flex items-center gap-2">
           <Loader2 class="w-3 h-3 animate-spin" />
           保存中...
@@ -142,10 +155,15 @@
 
       <!-- 写作区 -->
       <main class="flex-1 flex flex-col relative bg-white overflow-hidden">
-        <MonacoEditor 
-          ref="monacoRef"
-          v-model="editorContent"
-        />
+        <div v-show="!isPreviewMode" class="w-full h-full">
+          <MonacoEditor 
+            ref="monacoRef"
+            v-model="editorContent"
+          />
+        </div>
+        <div v-if="isPreviewMode" class="w-full h-full overflow-y-auto p-8 bg-white">
+          <div class="prose prose-lg prose-zinc max-w-none mx-auto" v-html="previewHtml"></div>
+        </div>
       </main>
 
       <!-- 结果弹窗 -->
@@ -261,7 +279,9 @@ import { parseFrontmatter, stringifyFrontmatter } from '@/utils/frontmatter'
 import { GITHUB_CONFIG } from '@/consts'
 import { toast } from 'vue-sonner'
 import { marked } from 'marked'
-import { ArrowLeft, Save, Loader2, HelpCircle, X, Copy, BookOpen, PanelLeftClose, PanelLeftOpen, Settings, Image as ImageIcon } from 'lucide-vue-next'
+import hljs from 'highlight.js'
+import 'highlight.js/styles/atom-one-dark.css'
+import { ArrowLeft, Save, Loader2, HelpCircle, X, Copy, BookOpen, PanelLeftClose, PanelLeftOpen, Settings, Image as ImageIcon, Eye, Edit } from 'lucide-vue-next'
 import MonacoEditor from '@/components/MonacoEditor.vue'
 import ResultModal from '@/components/ResultModal.vue'
 
@@ -278,6 +298,21 @@ const showTips = ref(false)
 const isSidebarOpen = ref(true)
 const monacoRef = ref(null)
 const fileInput = ref(null)
+const isPreviewMode = ref(false)
+
+// 配置 marked
+marked.setOptions({
+  highlight: function(code, lang) {
+    if (lang && hljs.getLanguage(lang)) {
+      return hljs.highlight(code, { language: lang }).value
+    }
+    return hljs.highlightAuto(code).value
+  }
+})
+
+const previewHtml = computed(() => {
+  return marked.parse(editorContent.value)
+})
 
 const resultModal = ref({
   show: false,
