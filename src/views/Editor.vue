@@ -175,6 +175,12 @@
         @close="resultModal.show = false"
       />
 
+      <!-- 认证弹窗 -->
+      <AuthModal
+        :show="showAuthModal"
+        @close="showAuthModal = false"
+      />
+
       <!-- 冲突解决模态框 -->
       <div v-if="showConflictModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
@@ -284,6 +290,7 @@ import 'highlight.js/styles/atom-one-dark.css'
 import { ArrowLeft, Save, Loader2, HelpCircle, X, Copy, BookOpen, PanelLeftClose, PanelLeftOpen, Settings, Image as ImageIcon, Eye, Edit } from 'lucide-vue-next'
 import MonacoEditor from '@/components/MonacoEditor.vue'
 import ResultModal from '@/components/ResultModal.vue'
+import AuthModal from '@/components/AuthModal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -320,6 +327,8 @@ const resultModal = ref({
   title: '',
   message: ''
 })
+
+const showAuthModal = ref(false)
 
 // 本地缓存相关状态
 const hasLocalChanges = ref(false)
@@ -440,6 +449,12 @@ const handleImageUpload = async (event) => {
         }
       } catch (err) {
         console.error(err)
+        // 检查认证错误
+        if (err.message.includes('需要先设置私钥') || err.message.includes('401') || err.message.includes('Unauthorized')) {
+          showAuthModal.value = true
+          return
+        }
+
         resultModal.value = {
           show: true,
           type: 'error',
@@ -532,6 +547,21 @@ const loadPost = async () => {
     
     toast.dismiss(loadingToast)
   } catch (e) {
+    // 检查认证错误
+    if (e.message.includes('需要先设置私钥') || e.message.includes('401') || e.message.includes('Unauthorized')) {
+      toast.dismiss()
+      showAuthModal.value = true
+      // 如果是认证错误，我们仍然尝试加载本地草稿，这样用户体验更好
+      const draft = localStorage.getItem(draftKey)
+      if (draft) {
+        const { data, content } = parseFrontmatter(draft)
+        editorContent.value = content
+        coverUrl.value = data.cover || ''
+        toast.info('已加载本地缓存版本，请在弹窗中重新认证')
+      }
+      return
+    }
+
     toast.error('无法加载文章: ' + e.message)
     // 即使远程加载失败，如果本地有草稿也尝试显示
     const draft = localStorage.getItem(draftKey)
@@ -608,6 +638,12 @@ const handleSavePost = async () => {
       }, 1500)
     }
   } catch (e) {
+    // 检查认证错误
+    if (e.message.includes('需要先设置私钥') || e.message.includes('401') || e.message.includes('Unauthorized')) {
+      showAuthModal.value = true
+      return
+    }
+
     resultModal.value = {
       show: true,
       type: 'error',
