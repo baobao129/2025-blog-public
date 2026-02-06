@@ -5,6 +5,7 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import * as monaco from 'monaco-editor'
+import { emmetHTML, emmetCSS, emmetJSX } from 'emmet-monaco-es'
 
 const props = defineProps({
   modelValue: {
@@ -20,10 +21,80 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 const container = ref(null)
 let editor = null
+let emmetDispose = null
+
+// 定义常用的代码片段
+const registerSnippets = () => {
+  // JavaScript Snippets
+  monaco.languages.registerCompletionItemProvider('javascript', {
+    provideCompletionItems: (model, position) => {
+      const suggestions = [
+        {
+          label: 'clg',
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: 'console.log($1)',
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: 'Console Log'
+        },
+        {
+          label: 'func',
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: 'const ${1:name} = (${2:args}) => {\n\t$0\n}',
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: 'Arrow Function'
+        },
+        {
+          label: 'imp',
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: 'import ${1:module} from \'${2:path}\'',
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: 'Import Statement'
+        }
+      ]
+      return { suggestions }
+    }
+  })
+
+  // Vue Snippets (映射到 html 语言模式下，或者当语言为 javascript 时)
+  monaco.languages.registerCompletionItemProvider('javascript', {
+    provideCompletionItems: (model, position) => {
+      const suggestions = [
+        {
+          label: 'vue3-setup',
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: [
+            'const { createApp, ref, onMounted } = Vue',
+            '',
+            'createApp({',
+            '\tsetup() {',
+            '\t\tconst ${1:state} = ref(${2:initialValue})',
+            '',
+            '\t\treturn {',
+            '\t\t\t$1',
+            '\t\t}',
+            '\t}',
+            '}).mount(\'#app\')'
+          ].join('\n'),
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: 'Vue 3 Setup Template'
+        }
+      ]
+      return { suggestions }
+    }
+  })
+}
 
 // 初始化编辑器
 const initMonaco = () => {
   if (!container.value) return
+
+  // 注册 Snippets
+  registerSnippets()
+
+  // 启用 Emmet
+  emmetDispose = emmetHTML(monaco)
+  emmetCSS(monaco)
+  emmetJSX(monaco)
 
   editor = monaco.editor.create(container.value, {
     value: props.modelValue,
@@ -77,6 +148,9 @@ onMounted(() => {
 onBeforeUnmount(() => {
   if (editor) {
     editor.dispose()
+  }
+  if (emmetDispose) {
+    emmetDispose()
   }
 })
 
