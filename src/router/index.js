@@ -3,6 +3,7 @@ import Home from '@/views/Home.vue'
 import Post from '@/views/Post.vue'
 import Admin from '@/views/Admin.vue'
 import Editor from '@/views/Editor.vue'
+import Playground from '@/views/Playground.vue'
 
 const routes = [
   {
@@ -14,6 +15,12 @@ const routes = [
     path: '/post/:filename',
     name: 'Post',
     component: Post
+  },
+  {
+    path: '/playground/:filename',
+    name: 'Playground',
+    component: Playground,
+    meta: { layout: 'fullscreen' }
   },
   {
     path: '/admin',

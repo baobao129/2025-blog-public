@@ -56,7 +56,7 @@
           <div class="flex items-center justify-between mb-4">
             <h3 class="font-serif font-bold text-primary text-lg">目录</h3>
             <button 
-              @click="showPlayground = true"
+              @click="router.push(`/playground/${route.params.filename}`)"
               class="text-xs flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-md hover:bg-primary/20 transition-colors"
               title="开启沉浸式代码演练"
             >
@@ -96,36 +96,13 @@
           回到顶部 &uarr;
         </button>
       </div>
-
-    <!-- 全屏代码演练场 -->
-    <Transition name="fade">
-      <div v-if="showPlayground" class="fixed inset-0 z-50 bg-white">
-        <CodePlayground 
-          @close="showPlayground = false"
-        >
-          <template #article>
-            <div class="mb-8">
-              <button 
-                @click="showPlayground = false"
-                class="flex items-center gap-2 text-sm text-text-muted hover:text-primary mb-4"
-              >
-                <ArrowLeft class="w-4 h-4" />
-                返回阅读模式
-              </button>
-              <h1 class="text-2xl font-bold text-primary mb-4">{{ formatTitle(route.params.filename) }}</h1>
-            </div>
-            <div v-html="contentHtml" class="prose prose-sm prose-zinc max-w-none"></div>
-          </template>
-        </CodePlayground>
-      </div>
-    </Transition>
+    </div>
   </div>
-</div>
 </template>
 
 <script setup>
 import { ref, onMounted, nextTick, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { marked } from 'marked'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/atom-one-dark.css'
@@ -134,9 +111,9 @@ import { parseFrontmatter } from '@/utils/frontmatter'
 import { useAuth } from '@/composables/useAuth'
 import { GITHUB_CONFIG } from '@/consts'
 import { Calendar, Clock, User, ArrowLeft, Code2 } from 'lucide-vue-next'
-import CodePlayground from '@/components/CodePlayground.vue'
 
 const route = useRoute()
+const router = useRouter()
 const { getAuthToken } = useAuth()
 const loading = ref(true)
 const error = ref(null)
@@ -145,7 +122,6 @@ const readingTime = ref(1)
 const articleRef = ref(null)
 const toc = ref([])
 const activeId = ref('')
-const showPlayground = ref(false)
 
 const scrollToTop = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
