@@ -10,6 +10,10 @@ const props = defineProps({
   modelValue: {
     type: String,
     default: ''
+  },
+  language: {
+    type: String,
+    default: 'markdown'
   }
 })
 
@@ -21,49 +25,10 @@ let editor = null
 const initMonaco = () => {
   if (!container.value) return
 
-  // 定义 Atom One Dark 主题
-  monaco.editor.defineTheme('one-dark', {
-    base: 'vs-dark',
-    inherit: true,
-    rules: [
-      { token: 'comment', foreground: '5c6370', fontStyle: 'italic' },
-      { token: 'keyword', foreground: 'c678dd' },
-      { token: 'string', foreground: '98c379' },
-      { token: 'number', foreground: 'd19a66' },
-      { token: 'regexp', foreground: '56b6c2' },
-      { token: 'type', foreground: 'e5c07b' },
-      { token: 'class', foreground: 'e5c07b' },
-      { token: 'function', foreground: '61afef' },
-      { token: 'variable', foreground: 'e06c75' },
-      { token: 'operator', foreground: '56b6c2' },
-      { token: 'delimiter', foreground: 'abb2bf' },
-      { token: 'tag', foreground: 'e06c75' },
-      { token: 'attribute.name', foreground: 'd19a66' },
-      { token: 'attribute.value', foreground: '98c379' },
-      // Markdown 特有高亮
-      { token: 'strong', foreground: 'e06c75', fontStyle: 'bold' },
-      { token: 'emphasis', foreground: 'c678dd', fontStyle: 'italic' },
-      { token: 'string.link', foreground: '61afef' },
-      { token: 'link', foreground: '61afef', fontStyle: 'underline' },
-      { token: 'heading', foreground: 'e06c75', fontStyle: 'bold' },
-      { token: 'list', foreground: 'e5c07b' },
-      { token: 'quote', foreground: '5c6370', fontStyle: 'italic' }
-    ],
-    colors: {
-      'editor.background': '#282c34',
-      'editor.foreground': '#abb2bf',
-      'editorCursor.foreground': '#528bff',
-      'editor.lineHighlightBackground': '#2c313c',
-      'editorLineNumber.foreground': '#4b5263',
-      'editor.selectionBackground': '#3e4451',
-      'editor.inactiveSelectionBackground': '#3e445180'
-    }
-  })
-
   editor = monaco.editor.create(container.value, {
     value: props.modelValue,
-    language: 'markdown',
-    theme: 'one-dark', // 使用自定义主题
+    language: props.language,
+    theme: 'vs-dark', // 恢复默认深色主题
     automaticLayout: true, // 自动布局
     fontSize: 14,
     fontFamily: '"JetBrains Mono", "Menlo", "Monaco", "Courier New", monospace',
@@ -95,6 +60,13 @@ const initMonaco = () => {
 watch(() => props.modelValue, (newValue) => {
   if (editor && newValue !== editor.getValue()) {
     editor.setValue(newValue)
+  }
+})
+
+// 监听语言变化
+watch(() => props.language, (newLang) => {
+  if (editor) {
+    monaco.editor.setModelLanguage(editor.getModel(), newLang)
   }
 })
 

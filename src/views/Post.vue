@@ -86,6 +86,23 @@
           回到顶部 &uarr;
         </button>
       </div>
+
+      <!-- 代码演练场入口 -->
+      <div class="fixed bottom-8 right-8 z-40">
+        <button
+          @click="showPlayground = true"
+          class="p-4 bg-primary text-white rounded-full shadow-lg shadow-primary/30 hover:bg-primary-hover hover:-translate-y-1 transition-all flex items-center gap-2 group"
+          title="打开代码演练场"
+        >
+          <Code2 class="w-6 h-6" />
+          <span class="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-in-out whitespace-nowrap">代码演练场</span>
+        </button>
+      </div>
+
+      <CodePlayground 
+        :show="showPlayground" 
+        @close="showPlayground = false" 
+      />
     </div>
   </div>
 </template>
@@ -100,7 +117,8 @@ import { getFileContent } from '@/utils/github-client'
 import { parseFrontmatter } from '@/utils/frontmatter'
 import { useAuth } from '@/composables/useAuth'
 import { GITHUB_CONFIG } from '@/consts'
-import { Calendar, Clock, User, ArrowLeft } from 'lucide-vue-next'
+import { Calendar, Clock, User, ArrowLeft, Code2 } from 'lucide-vue-next'
+import CodePlayground from '@/components/CodePlayground.vue'
 
 const route = useRoute()
 const { getAuthToken } = useAuth()
@@ -111,6 +129,7 @@ const readingTime = ref(1)
 const articleRef = ref(null)
 const toc = ref([])
 const activeId = ref('')
+const showPlayground = ref(false)
 
 const scrollToTop = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
