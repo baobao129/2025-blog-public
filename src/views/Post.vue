@@ -77,10 +77,10 @@
                   </a>
                 </li>
               </ul>
-            </nav>
-            <p v-else class="text-text-light text-sm italic">暂无目录</p>
-          </div>
-        </aside>
+          </nav>
+          <p v-else class="text-text-light text-sm italic">暂无目录</p>
+        </div>
+      </aside>
       </div>
 
       <!-- 底部导航 -->
