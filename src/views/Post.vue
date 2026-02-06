@@ -120,6 +120,7 @@
       </div>
     </Transition>
   </div>
+</div>
 </template>
 
 <script setup>
