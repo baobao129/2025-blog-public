@@ -51,10 +51,20 @@
         </article>
 
         <!-- 侧边目录 (Desktop) -->
-        <aside class="hidden lg:block w-64 flex-shrink-0">
-          <div class="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pr-4">
-            <h3 class="font-serif font-bold text-primary mb-4 text-lg">目录</h3>
-            <nav v-if="toc.length > 0">
+      <aside class="hidden lg:block w-64 flex-shrink-0">
+        <div class="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pr-4">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-serif font-bold text-primary text-lg">目录</h3>
+            <button 
+              @click="showPlayground = true"
+              class="text-xs flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-md hover:bg-primary/20 transition-colors"
+              title="开启沉浸式代码演练"
+            >
+              <Code2 class="w-3 h-3" />
+              演练模式
+            </button>
+          </div>
+          <nav v-if="toc.length > 0">
               <ul class="space-y-2 text-sm border-l border-gray-200">
                 <li v-for="item in toc" :key="item.id" :class="{ 'pl-3': item.level === 2, 'pl-6': item.level === 3 }">
                   <a 
@@ -87,23 +97,28 @@
         </button>
       </div>
 
-      <!-- 代码演练场入口 -->
-      <div class="fixed bottom-8 right-8 z-40">
-        <button
-          @click="showPlayground = true"
-          class="p-4 bg-primary text-white rounded-full shadow-lg shadow-primary/30 hover:bg-primary-hover hover:-translate-y-1 transition-all flex items-center gap-2 group"
-          title="打开代码演练场"
+    <!-- 全屏代码演练场 -->
+    <Transition name="fade">
+      <div v-if="showPlayground" class="fixed inset-0 z-50 bg-white">
+        <CodePlayground 
+          @close="showPlayground = false"
         >
-          <Code2 class="w-6 h-6" />
-          <span class="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-in-out whitespace-nowrap">代码演练场</span>
-        </button>
+          <template #article>
+            <div class="mb-8">
+              <button 
+                @click="showPlayground = false"
+                class="flex items-center gap-2 text-sm text-text-muted hover:text-primary mb-4"
+              >
+                <ArrowLeft class="w-4 h-4" />
+                返回阅读模式
+              </button>
+              <h1 class="text-2xl font-bold text-primary mb-4">{{ formatTitle(route.params.filename) }}</h1>
+            </div>
+            <div v-html="contentHtml" class="prose prose-sm prose-zinc max-w-none"></div>
+          </template>
+        </CodePlayground>
       </div>
-
-      <CodePlayground 
-        :show="showPlayground" 
-        @close="showPlayground = false" 
-      />
-    </div>
+    </Transition>
   </div>
 </template>
 
@@ -266,5 +281,15 @@ onUnmounted(() => {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>
