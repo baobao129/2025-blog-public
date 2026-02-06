@@ -21,7 +21,6 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 const container = ref(null)
 let editor = null
-let emmetDispose = null
 
 // 定义常用的代码片段
 const registerSnippets = () => {
@@ -88,13 +87,18 @@ const registerSnippets = () => {
 const initMonaco = () => {
   if (!container.value) return
 
-  // 注册 Snippets
-  registerSnippets()
+  // 全局一次性初始化 (Snippets 和 Emmet)
+  if (!window.__MONACO_PROVIDERS_INITIALIZED__) {
+    // 注册 Snippets
+    registerSnippets()
 
-  // 启用 Emmet
-  emmetDispose = emmetHTML(monaco)
-  emmetCSS(monaco)
-  emmetJSX(monaco)
+    // 启用 Emmet (确保只初始化一次，并支持 Markdown)
+    emmetHTML(monaco, ['html', 'markdown'])
+    emmetCSS(monaco, ['css', 'less', 'scss'])
+    emmetJSX(monaco, ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'])
+    
+    window.__MONACO_PROVIDERS_INITIALIZED__ = true
+  }
 
   editor = monaco.editor.create(container.value, {
     value: props.modelValue,
@@ -148,9 +152,6 @@ onMounted(() => {
 onBeforeUnmount(() => {
   if (editor) {
     editor.dispose()
-  }
-  if (emmetDispose) {
-    emmetDispose()
   }
 })
 
