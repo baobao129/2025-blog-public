@@ -37,13 +37,17 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 rounded-full hover:bg-gray-400 transition-colors;
+  @apply bg-gray-300 dark:bg-gray-700 rounded-full hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors;
 }
 
 html {
   @apply bg-background text-text-main antialiased scroll-smooth;
 }
 
+html.dark {
+  color-scheme: dark;
+}
+
 ::selection {
-  @apply bg-accent-light/30 text-text-main;
+  @apply bg-accent-light/30 text-text-main dark:bg-accent/30 dark:text-white;
 }

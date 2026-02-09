@@ -1,42 +1,43 @@
 <template>
   <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <ReadingProgress />
     <!-- 加载状态 -->
     <div v-if="loading" class="flex flex-col items-center py-20 space-y-4">
       <div class="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-      <p class="text-text-light text-sm animate-pulse">正在加载文章...</p>
+      <p class="text-gray-500 dark:text-gray-400 text-sm animate-pulse">正在加载文章...</p>
     </div>
 
     <!-- 错误提示 -->
-    <div v-else-if="error" class="bg-red-50 border border-red-100 text-red-700 p-6 rounded-xl text-center my-12">
+    <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 text-red-700 dark:text-red-400 p-6 rounded-xl text-center my-12">
       {{ error }}
       <div class="mt-4">
-        <router-link to="/" class="text-primary hover:text-accent underline transition-colors">返回首页</router-link>
+        <router-link to="/" class="text-primary hover:text-accent dark:hover:text-white underline transition-colors">返回首页</router-link>
       </div>
     </div>
 
     <div v-else class="animate-fade-in-up">
       <!-- 导航栏 -->
-      <nav class="mb-8 flex items-center gap-2 text-sm text-text-light">
-        <router-link to="/" class="hover:text-primary transition-colors">首页</router-link>
+      <nav class="mb-8 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+        <router-link to="/" class="hover:text-primary dark:hover:text-white transition-colors">首页</router-link>
         <span>/</span>
-        <span class="text-text-muted truncate">{{ route.params.filename.replace('.md', '') }}</span>
+        <span class="text-gray-400 dark:text-gray-500 truncate">{{ route.params.filename.replace('.md', '') }}</span>
       </nav>
 
       <!-- 文章头部 -->
       <header class="mb-12 text-center max-w-3xl mx-auto">
-        <div class="inline-flex items-center gap-2 px-3 py-1 bg-gray-50 rounded-full text-xs font-medium text-text-muted mb-6 border border-gray-100">
+        <div class="inline-flex items-center gap-2 px-3 py-1 bg-gray-50 dark:bg-gray-800 rounded-full text-xs font-medium text-gray-500 dark:text-gray-400 mb-6 border border-gray-100 dark:border-gray-700">
           <Calendar class="w-3 h-3" />
           <span>{{ new Date().toLocaleDateString('zh-CN') }}</span>
         </div>
-        <h1 class="text-4xl md:text-5xl font-serif font-bold text-primary mb-6 leading-tight">
+        <h1 class="text-4xl md:text-5xl font-serif font-bold text-gray-900 dark:text-white mb-6 leading-tight">
           {{ formatTitle(route.params.filename) }}
         </h1>
-        <div class="flex items-center justify-center gap-4 text-sm text-text-muted">
+        <div class="flex items-center justify-center gap-4 text-sm text-gray-500 dark:text-gray-400">
           <div class="flex items-center gap-1">
             <User class="w-4 h-4" />
             <span>作者</span>
           </div>
-          <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
+          <span class="w-1 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></span>
           <div class="flex items-center gap-1">
             <Clock class="w-4 h-4" />
             <span>约 {{ readingTime }} 分钟阅读</span>
@@ -46,52 +47,52 @@
 
       <div class="flex flex-col lg:flex-row gap-12 relative">
         <!-- 文章内容 -->
-        <article class="prose prose-lg prose-zinc flex-1 min-w-0 max-w-none prose-headings:scroll-mt-24">
+        <article class="prose prose-lg prose-zinc dark:prose-invert flex-1 min-w-0 max-w-none prose-headings:scroll-mt-24 prose-img:rounded-xl prose-img:shadow-lg">
           <div v-html="contentHtml" ref="articleRef"></div>
         </article>
 
         <!-- 侧边目录 (Desktop) -->
-      <aside class="hidden lg:block w-64 flex-shrink-0">
-        <div class="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pr-4">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="font-serif font-bold text-primary text-lg">目录</h3>
-            <button 
-              @click="router.push(`/playground/${route.params.filename}`)"
-              class="text-xs flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-md hover:bg-primary/20 transition-colors"
-              title="开启沉浸式代码演练"
-            >
-              <Code2 class="w-3 h-3" />
-              演练模式
-            </button>
+        <aside class="hidden lg:block w-64 flex-shrink-0">
+          <div class="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pr-4 scrollbar-hide">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-serif font-bold text-gray-900 dark:text-white text-lg">目录</h3>
+              <button 
+                @click="router.push(`/playground/${route.params.filename}`)"
+                class="text-xs flex items-center gap-1 px-2 py-1 bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary-300 rounded-md hover:bg-primary/20 dark:hover:bg-primary/30 transition-colors"
+                title="开启沉浸式代码演练"
+              >
+                <Code2 class="w-3 h-3" />
+                演练模式
+              </button>
+            </div>
+            <nav v-if="toc.length > 0">
+                <ul class="space-y-2 text-sm border-l border-gray-200 dark:border-gray-700">
+                  <li v-for="item in toc" :key="item.id" :class="{ 'pl-3': item.level === 2, 'pl-6': item.level === 3 }">
+                    <a 
+                      :href="`#${item.id}`" 
+                      @click.prevent="scrollToHeading(item.id)"
+                      class="block py-1 text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors border-l-2 border-transparent -ml-[1px] pl-3 hover:border-primary dark:hover:border-primary-300"
+                      :class="{ 'text-primary dark:text-white border-primary dark:border-primary-300 font-medium': activeId === item.id }"
+                    >
+                      {{ item.text }}
+                    </a>
+                  </li>
+                </ul>
+            </nav>
+            <p v-else class="text-gray-400 dark:text-gray-500 text-sm italic">暂无目录</p>
           </div>
-          <nav v-if="toc.length > 0">
-              <ul class="space-y-2 text-sm border-l border-gray-200">
-                <li v-for="item in toc" :key="item.id" :class="{ 'pl-3': item.level === 2, 'pl-6': item.level === 3 }">
-                  <a 
-                    :href="`#${item.id}`" 
-                    @click.prevent="scrollToHeading(item.id)"
-                    class="block py-1 text-text-muted hover:text-accent transition-colors border-l-2 border-transparent -ml-[1px] pl-3 hover:border-accent"
-                    :class="{ 'text-accent border-accent font-medium': activeId === item.id }"
-                  >
-                    {{ item.text }}
-                  </a>
-                </li>
-              </ul>
-          </nav>
-          <p v-else class="text-text-light text-sm italic">暂无目录</p>
-        </div>
-      </aside>
+        </aside>
       </div>
 
       <!-- 底部导航 -->
-      <div class="border-t border-gray-100 pt-12 mt-12 flex justify-between max-w-3xl mx-auto lg:max-w-none">
-        <router-link to="/" class="group flex items-center gap-2 text-text-muted hover:text-primary transition-colors">
+      <div class="border-t border-gray-100 dark:border-gray-800 pt-12 mt-12 flex justify-between max-w-3xl mx-auto lg:max-w-none">
+        <router-link to="/" class="group flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors">
           <ArrowLeft class="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           <span>返回首页</span>
         </router-link>
         <button 
           @click="scrollToTop" 
-          class="text-text-muted hover:text-primary transition-colors"
+          class="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors"
         >
           回到顶部 &uarr;
         </button>
@@ -111,6 +112,7 @@ import { parseFrontmatter } from '@/utils/frontmatter'
 import { useAuth } from '@/composables/useAuth'
 import { GITHUB_CONFIG } from '@/consts'
 import { Calendar, Clock, User, ArrowLeft, Code2 } from 'lucide-vue-next'
+import ReadingProgress from '@/components/ReadingProgress.vue'
 
 const route = useRoute()
 const router = useRouter()
