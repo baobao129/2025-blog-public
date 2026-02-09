@@ -1,118 +1,102 @@
 <template>
-  <div class="relative min-h-screen">
-    <!-- 进度指示器 (右侧像素条) -->
-    <div class="fixed top-0 right-0 h-full w-1 z-50 bg-[#111]">
-      <div 
-        class="bg-[#CCFF00] w-full transition-all duration-100 ease-out"
-        :style="{ height: `${scrollProgress}%` }"
-      ></div>
-    </div>
-
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <ReadingProgress />
     <!-- 加载状态 -->
-    <div v-if="loading" class="flex flex-col items-center justify-center min-h-screen">
-      <TypewriterText text="LOADING_DATA_STREAM..." :speed="50" class="text-[#CCFF00] font-mono" />
+    <div v-if="loading" class="flex flex-col items-center py-20 space-y-4">
+      <div class="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+      <p class="text-gray-500 dark:text-gray-400 text-sm animate-pulse">正在加载文章...</p>
     </div>
 
     <!-- 错误提示 -->
-    <div v-else-if="error" class="min-h-screen flex items-center justify-center">
-      <div class="border border-red-500 p-8 text-red-500 font-mono text-center max-w-lg">
-        <p class="mb-4">FATAL_ERROR: {{ error }}</p>
-        <router-link to="/" class="cb-btn inline-block">RETURN_HOME</router-link>
+    <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 text-red-700 dark:text-red-400 p-6 rounded-xl text-center my-12">
+      {{ error }}
+      <div class="mt-4">
+        <router-link to="/" class="text-primary hover:text-accent dark:hover:text-white underline transition-colors">返回首页</router-link>
       </div>
     </div>
 
-    <div v-else class="flex flex-col lg:flex-row min-h-screen">
-      <!-- 左侧：元数据栏 (IDE 风格) -->
-      <aside class="hidden lg:flex flex-col w-64 border-r border-[#222] fixed h-screen overflow-y-auto bg-[#050505] z-40">
-        <div class="p-6 border-b border-[#222]">
-          <router-link to="/" class="text-[#CCFF00] font-mono text-sm hover:underline">&lt; CD ..</router-link>
-        </div>
-        
-        <div class="p-6 space-y-8 font-mono text-xs text-[#888]">
-          <div>
-            <h3 class="text-white mb-2 uppercase">Meta_Data</h3>
-            <ul class="space-y-2">
-              <li class="flex justify-between">
-                <span>DATE:</span>
-                <span class="text-white">{{ new Date().toLocaleDateString() }}</span>
-              </li>
-              <li class="flex justify-between">
-                <span>AUTHOR:</span>
-                <span class="text-white">SYS_ADMIN</span>
-              </li>
-              <li class="flex justify-between">
-                <span>READ_TIME:</span>
-                <span class="text-white">{{ readingTime }} MIN</span>
-              </li>
-            </ul>
-          </div>
+    <div v-else class="animate-fade-in-up">
+      <!-- 导航栏 -->
+      <nav class="mb-8 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+        <router-link to="/" class="hover:text-primary dark:hover:text-white transition-colors">首页</router-link>
+        <span>/</span>
+        <span class="text-gray-400 dark:text-gray-500 truncate">{{ route.params.filename.replace('.md', '') }}</span>
+      </nav>
 
-          <div>
-            <h3 class="text-white mb-2 uppercase">Table_Of_Contents</h3>
-            <ul class="space-y-1 relative border-l border-[#222] ml-1">
-              <li v-for="item in toc" :key="item.id" class="pl-4 relative">
-                <!-- 连接线 -->
-                <div 
-                  class="absolute left-0 top-1/2 w-3 h-px bg-[#222] transition-colors duration-200"
-                  :class="{ 'bg-[#CCFF00]': activeId === item.id }"
-                ></div>
-                <a 
-                  :href="`#${item.id}`" 
-                  @click.prevent="scrollToHeading(item.id)"
-                  class="block py-1 hover:text-[#CCFF00] transition-colors truncate"
-                  :class="{ 'text-[#CCFF00] font-bold': activeId === item.id }"
-                >
-                  {{ item.text }}
-                </a>
-              </li>
-            </ul>
+      <!-- 文章头部 -->
+      <header class="mb-12 text-center max-w-3xl mx-auto">
+        <div class="inline-flex items-center gap-2 px-3 py-1 bg-gray-50 dark:bg-gray-800 rounded-full text-xs font-medium text-gray-500 dark:text-gray-400 mb-6 border border-gray-100 dark:border-gray-700">
+          <Calendar class="w-3 h-3" />
+          <span>{{ new Date().toLocaleDateString('zh-CN') }}</span>
+        </div>
+        <h1 class="text-4xl md:text-5xl font-serif font-bold text-gray-900 dark:text-white mb-6 leading-tight">
+          {{ formatTitle(route.params.filename) }}
+        </h1>
+        <div class="flex items-center justify-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+          <div class="flex items-center gap-1">
+            <User class="w-4 h-4" />
+            <span>作者</span>
+          </div>
+          <span class="w-1 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></span>
+          <div class="flex items-center gap-1">
+            <Clock class="w-4 h-4" />
+            <span>约 {{ readingTime }} 分钟阅读</span>
           </div>
         </div>
+      </header>
 
-        <div class="mt-auto p-6 border-t border-[#222]">
-          <button 
-            @click="router.push(`/playground/${route.params.filename}`)"
-            class="w-full py-2 border border-[#CCFF00] text-[#CCFF00] text-xs font-bold hover:bg-[#CCFF00] hover:text-black transition-colors"
-          >
-            OPEN_TERMINAL_MODE
-          </button>
-        </div>
-      </aside>
+      <div class="flex flex-col lg:flex-row gap-12 relative">
+        <!-- 文章内容 -->
+        <article class="prose prose-lg prose-zinc dark:prose-invert flex-1 min-w-0 max-w-none prose-headings:scroll-mt-24 prose-img:rounded-xl prose-img:shadow-lg">
+          <div v-html="contentHtml" ref="articleRef"></div>
+        </article>
 
-      <!-- 中间：正文区域 -->
-      <main class="lg:ml-64 flex-1 w-full min-w-0 bg-[#050505] relative">
-        <!-- 移动端导航 -->
-        <nav class="lg:hidden sticky top-0 z-40 bg-[#050505]/90 backdrop-blur border-b border-[#222] p-4 flex justify-between items-center">
-          <router-link to="/" class="text-[#CCFF00] font-mono text-sm">&lt; HOME</router-link>
-          <span class="font-mono text-xs text-[#888] truncate max-w-[150px]">{{ formatTitle(route.params.filename) }}</span>
-        </nav>
-
-        <div class="max-w-4xl mx-auto px-6 py-12 lg:py-20">
-          <header class="mb-16 border-b border-[#222] pb-8">
-            <h1 class="text-4xl md:text-6xl font-['Space_Mono'] font-bold text-white mb-6 leading-tight uppercase">
-              {{ formatTitle(route.params.filename) }}
-            </h1>
-            <div class="flex flex-wrap gap-4 font-mono text-xs text-[#CCFF00]">
-              <span class="border border-[#222] px-2 py-1">ID: {{ route.params.filename }}</span>
-              <span class="border border-[#222] px-2 py-1">STATUS: PUBLISHED</span>
+        <!-- 侧边目录 (Desktop) -->
+        <aside class="hidden lg:block w-64 flex-shrink-0">
+          <div class="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pr-4 scrollbar-hide">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-serif font-bold text-gray-900 dark:text-white text-lg">目录</h3>
+              <button 
+                @click="router.push(`/playground/${route.params.filename}`)"
+                class="text-xs flex items-center gap-1 px-2 py-1 bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary-300 rounded-md hover:bg-primary/20 dark:hover:bg-primary/30 transition-colors"
+                title="开启沉浸式代码演练"
+              >
+                <Code2 class="w-3 h-3" />
+                演练模式
+              </button>
             </div>
-          </header>
-
-          <article class="prose prose-invert prose-lg max-w-none prose-p:font-mono prose-headings:font-['Space_Mono'] prose-headings:uppercase prose-pre:bg-[#111] prose-pre:border prose-pre:border-[#222] prose-a:text-[#CCFF00] prose-blockquote:border-l-[#CCFF00] prose-img:border prose-img:border-[#222]">
-            <div v-html="contentHtml" ref="articleRef"></div>
-          </article>
-
-          <!-- 底部导航 -->
-          <div class="mt-20 pt-8 border-t border-[#222] flex justify-between items-center font-mono text-sm">
-            <router-link to="/" class="hover:text-[#CCFF00] transition-colors">
-              &lt; RETURN_TO_ROOT
-            </router-link>
-            <button @click="scrollToTop" class="hover:text-[#CCFF00] transition-colors">
-              SCROLL_TO_TOP ^
-            </button>
+            <nav v-if="toc.length > 0">
+                <ul class="space-y-2 text-sm border-l border-gray-200 dark:border-gray-700">
+                  <li v-for="item in toc" :key="item.id" :class="{ 'pl-3': item.level === 2, 'pl-6': item.level === 3 }">
+                    <a 
+                      :href="`#${item.id}`" 
+                      @click.prevent="scrollToHeading(item.id)"
+                      class="block py-1 text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors border-l-2 border-transparent -ml-[1px] pl-3 hover:border-primary dark:hover:border-primary-300"
+                      :class="{ 'text-primary dark:text-white border-primary dark:border-primary-300 font-medium': activeId === item.id }"
+                    >
+                      {{ item.text }}
+                    </a>
+                  </li>
+                </ul>
+            </nav>
+            <p v-else class="text-gray-400 dark:text-gray-500 text-sm italic">暂无目录</p>
           </div>
-        </div>
-      </main>
+        </aside>
+      </div>
+
+      <!-- 底部导航 -->
+      <div class="border-t border-gray-100 dark:border-gray-800 pt-12 mt-12 flex justify-between max-w-3xl mx-auto lg:max-w-none">
+        <router-link to="/" class="group flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors">
+          <ArrowLeft class="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          <span>返回首页</span>
+        </router-link>
+        <button 
+          @click="scrollToTop" 
+          class="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors"
+        >
+          回到顶部 &uarr;
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -122,19 +106,17 @@ import { ref, onMounted, nextTick, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { marked } from 'marked'
 import hljs from 'highlight.js'
-import 'highlight.js/styles/atom-one-dark.css' // 可以考虑换一个更极客的主题
+import 'highlight.js/styles/atom-one-dark.css'
 import { getFileContent } from '@/utils/github-client'
 import { parseFrontmatter } from '@/utils/frontmatter'
 import { useAuth } from '@/composables/useAuth'
 import { GITHUB_CONFIG } from '@/consts'
-import { useWindowScroll } from '@vueuse/core'
-import TypewriterText from '@/components/TypewriterText.vue'
+import { Calendar, Clock, User, ArrowLeft, Code2 } from 'lucide-vue-next'
+import ReadingProgress from '@/components/ReadingProgress.vue'
 
 const route = useRoute()
 const router = useRouter()
 const { getAuthToken } = useAuth()
-const { y } = useWindowScroll()
-
 const loading = ref(true)
 const error = ref(null)
 const contentHtml = ref('')
@@ -142,17 +124,6 @@ const readingTime = ref(1)
 const articleRef = ref(null)
 const toc = ref([])
 const activeId = ref('')
-const scrollProgress = ref(0)
-
-// 滚动进度监听
-import { watch } from 'vue'
-watch(y, () => {
-  const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight
-  if (docHeight > 0) {
-    scrollProgress.value = Math.min(100, Math.max(0, (y.value / docHeight) * 100))
-  }
-  handleScroll()
-})
 
 const scrollToTop = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -210,7 +181,7 @@ const scrollToHeading = (id) => {
   }
 }
 
-// 滚动监听 (Active TOC)
+// 滚动监听
 const handleScroll = () => {
   const headings = document.querySelectorAll('h2, h3')
   if (headings.length === 0) return
@@ -242,7 +213,7 @@ const fetchPost = async () => {
     try {
       token = await getAuthToken()
     } catch (e) {
-      console.log('GUEST_MODE')
+      console.log('未登录，尝试以访客模式访问')
     }
 
     const rawContent = await getFileContent(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, `posts/${filename}`)
@@ -252,9 +223,15 @@ const fetchPost = async () => {
     const rawHtml = marked.parse(content)
     contentHtml.value = processContent(rawHtml)
     
+    // 等待 DOM 更新后绑定事件
+    nextTick(() => {
+      window.addEventListener('scroll', handleScroll)
+      handleScroll() // 初始化高亮
+    })
+
   } catch (e) {
     console.error(e)
-    error.value = 'DATA_CORRUPTED: ' + e.message
+    error.value = '无法加载文章: ' + e.message
   } finally {
     loading.value = false
   }
@@ -263,4 +240,35 @@ const fetchPost = async () => {
 onMounted(() => {
   fetchPost()
 })
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
 </script>
+
+<style scoped>
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

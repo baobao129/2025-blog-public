@@ -1,59 +1,53 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@300;400;700&family=Press+Start+2P&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --cb-bg: #050505;
-    --cb-text: #E0E0E0;
-    --cb-primary: #CCFF00;
-    --cb-accent: #FF00FF;
-    --cb-grid: #222222;
-  }
-
-  html {
-    @apply bg-[#050505] text-[#E0E0E0] antialiased scroll-smooth cursor-none;
-    font-family: 'JetBrains Mono', monospace;
-  }
-
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-['Space_Mono'] font-bold uppercase tracking-tighter;
-  }
-
-  ::selection {
-    @apply bg-[#CCFF00] text-black;
-  }
+/* 全局过渡动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
 }
 
-@layer components {
-  .cb-border {
-    @apply border border-[#333] hover:border-[#CCFF00] transition-colors duration-0;
-  }
-  
-  .cb-btn {
-    @apply px-6 py-3 bg-transparent border border-[#CCFF00] text-[#CCFF00] font-bold uppercase hover:bg-[#CCFF00] hover:text-black transition-all duration-0 active:translate-y-1;
-  }
-  
-  .glitch-text {
-    @apply relative inline-block;
-  }
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
-/* 滚动条 */
+/* 列表项动画 */
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.3s ease;
+}
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+/* 滚动条美化 */
 ::-webkit-scrollbar {
-  width: 12px;
-  background: #000;
-  border-left: 1px solid #333;
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #333;
-  border: 2px solid #000;
+  @apply bg-gray-300 dark:bg-gray-700 rounded-full hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #CCFF00;
+html {
+  @apply bg-background text-text-main antialiased scroll-smooth;
 }
 
+html.dark {
+  color-scheme: dark;
+}
+
+::selection {
+  @apply bg-accent-light/30 text-text-main dark:bg-accent/30 dark:text-white;
+}
