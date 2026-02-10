@@ -1,7 +1,7 @@
 <template>
   <button
     @click="toggleDark()"
-    class="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-300 focus:outline-none"
+    class="relative p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors duration-300 focus:outline-none cursor-pointer z-50"
     title="Toggle Theme"
   >
     <div class="relative w-5 h-5 overflow-hidden">

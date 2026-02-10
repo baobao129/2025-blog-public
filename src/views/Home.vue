@@ -13,18 +13,18 @@
 
       <!-- 搜索框 (Glassmorphism) -->
       <div class="relative w-full md:w-80 group">
-        <GlassCard variant="light" class="rounded-full overflow-hidden flex items-center px-4 py-2 transition-all duration-300 focus-within:ring-2 focus-within:ring-primary/20">
-          <Search class="w-4 h-4 text-gray-400 group-focus-within:text-primary transition-colors" />
+        <div class="rounded-full overflow-hidden flex items-center px-4 py-2 transition-all duration-300 focus-within:ring-2 focus-within:ring-primary/20 bg-white/40 dark:bg-black/30 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-lg">
+          <Search class="w-4 h-4 text-gray-400 group-focus-within:text-primary transition-colors flex-shrink-0" />
           <input 
             v-model="searchQuery"
             type="text" 
             placeholder="搜索标题、内容或标签..." 
-            class="w-full bg-transparent border-none outline-none text-sm ml-2 text-gray-700 dark:text-gray-200 placeholder-gray-400"
+            class="w-full bg-transparent border-none outline-none text-sm ml-2 text-gray-700 dark:text-gray-200 placeholder-gray-400 min-w-0"
           >
-          <button v-if="searchQuery" @click="searchQuery = ''" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+          <button v-if="searchQuery" @click="searchQuery = ''" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 flex-shrink-0">
             <X class="w-3 h-3" />
           </button>
-        </GlassCard>
+        </div>
       </div>
     </div>
 

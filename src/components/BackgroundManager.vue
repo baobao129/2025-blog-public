@@ -90,7 +90,7 @@
     <button 
       v-if="!showSettings"
       @click="showSettings = true"
-      class="fixed bottom-6 right-6 z-[90] p-3 rounded-full bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/20 shadow-lg text-gray-700 dark:text-gray-200 hover:bg-primary hover:text-white transition-all hover:scale-110 group"
+      class="fixed bottom-6 right-6 z-[9999] p-3 rounded-full bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/20 shadow-lg text-gray-700 dark:text-gray-200 hover:bg-primary hover:text-white transition-all hover:scale-110 group cursor-pointer pointer-events-auto"
       title="背景设置"
     >
       <Settings2 class="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
