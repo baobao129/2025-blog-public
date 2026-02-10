@@ -1,31 +1,39 @@
 <template>
-  <div class="space-y-16">
-    <!-- Hero 区域 -->
-    <header class="py-24 md:py-40 text-center space-y-8 animate-fade-in-up relative overflow-hidden rounded-3xl">
-      <GlassCard variant="default" class="absolute inset-0 -z-10 rounded-3xl" :hover="false"></GlassCard>
-      
-      <div class="relative z-10 px-4">
-        <span class="inline-block py-1.5 px-4 rounded-full bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/20 text-xs font-bold tracking-widest text-primary/80 dark:text-white/80 mb-8 shadow-sm uppercase">
-          Insights & Thoughts
-        </span>
-        <h1 class="text-5xl md:text-8xl font-serif font-bold text-primary dark:text-white tracking-tight mb-8 leading-tight drop-shadow-sm">
-          思绪 <span class="text-accent italic font-light px-2 relative inline-block">
-            &
-            <span class="absolute -top-2 -right-4 text-3xl animate-bounce delay-700">✨</span>
-          </span> 随笔
+  <div class="h-full flex flex-col">
+    <!-- Header: 标题 & 搜索 -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 animate-fade-in-up">
+      <div>
+        <h1 class="text-3xl md:text-4xl font-serif font-bold text-primary dark:text-white tracking-tight mb-2">
+          文章列表
         </h1>
-        <p class="text-lg md:text-2xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed font-sans tracking-wide font-light">
-          探索技术的边界，记录设计的灵感，分享生活的<span class="text-primary dark:text-white font-medium border-b-2 border-accent/40 pb-0.5">点滴瞬间</span>。
+        <p class="text-gray-500 dark:text-gray-400 font-sans text-sm">
+          共 {{ filteredPosts.length }} 篇文章
         </p>
       </div>
-    </header>
+
+      <!-- 搜索框 (Glassmorphism) -->
+      <div class="relative w-full md:w-80 group">
+        <GlassCard variant="light" class="rounded-full overflow-hidden flex items-center px-4 py-2 transition-all duration-300 focus-within:ring-2 focus-within:ring-primary/20">
+          <Search class="w-4 h-4 text-gray-400 group-focus-within:text-primary transition-colors" />
+          <input 
+            v-model="searchQuery"
+            type="text" 
+            placeholder="搜索标题、内容或标签..." 
+            class="w-full bg-transparent border-none outline-none text-sm ml-2 text-gray-700 dark:text-gray-200 placeholder-gray-400"
+          >
+          <button v-if="searchQuery" @click="searchQuery = ''" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+            <X class="w-3 h-3" />
+          </button>
+        </GlassCard>
+      </div>
+    </div>
 
     <!-- 加载状态 -->
-    <div v-if="loading" class="flex justify-center py-20">
+    <div v-if="loading" class="flex-grow flex justify-center items-center">
       <div class="flex gap-2">
-        <div class="w-3 h-3 bg-primary rounded-full animate-bounce"></div>
-        <div class="w-3 h-3 bg-primary rounded-full animate-bounce delay-100"></div>
-        <div class="w-3 h-3 bg-primary rounded-full animate-bounce delay-200"></div>
+        <div class="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+        <div class="w-2 h-2 bg-primary rounded-full animate-bounce delay-100"></div>
+        <div class="w-2 h-2 bg-primary rounded-full animate-bounce delay-200"></div>
       </div>
     </div>
 
@@ -35,104 +43,82 @@
       <button @click="fetchPosts" class="mt-4 text-sm underline hover:text-red-800 dark:hover:text-red-300">重试</button>
     </div>
 
-    <!-- 文章列表 -->
-    <div v-else class="space-y-12">
-      <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+    <!-- 文章列表 (List View) -->
+    <div v-else class="flex-grow flex flex-col min-h-0">
+      <div class="flex-grow overflow-y-auto scrollbar-hide -mx-4 px-4 pb-20">
         <TransitionGroup name="list">
-          <div v-if="displayedPosts.length === 0" class="col-span-full text-center py-20">
-            <GlassCard variant="light" class="p-10">
-              <p class="text-gray-500 dark:text-gray-400 text-lg">暂无文章，请前往管理后台发布。</p>
-            </GlassCard>
+          <div v-if="paginatedPosts.length === 0" class="text-center py-20">
+            <p class="text-gray-400 dark:text-gray-500">没有找到相关文章。</p>
           </div>
 
           <GlassCard 
-            v-for="(post, index) in displayedPosts" 
+            v-for="(post, index) in paginatedPosts" 
             :key="post.sha"
-            variant="default"
+            variant="interactive"
             :hover="true"
-            :shine="true"
-            class="rounded-2xl h-full flex flex-col group cursor-pointer"
-            :style="{ transitionDelay: `${index * 50}ms` }"
+            class="mb-4 rounded-xl group transition-all duration-300 border-l-4 border-l-transparent hover:border-l-primary"
+            :style="{ transitionDelay: `${index * 30}ms` }"
             @click="router.push('/post/' + post.name)"
           >
-            <!-- 封面图区域 -->
-            <div class="aspect-[16/10] overflow-hidden relative border-b border-white/10">
-               <!-- 图片 -->
-               <img 
-                 v-if="post.cover" 
-                 :src="post.cover" 
-                 class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                 alt="Article Cover"
-                 loading="lazy"
-               >
-               <!-- 渐变占位 -->
-               <div v-else :class="['w-full h-full bg-gradient-to-br transition-transform duration-700 group-hover:scale-105 opacity-80 dark:opacity-60', getRandomGradient(index)]"></div>
-               
-               <div v-if="!post.cover" class="absolute inset-0 flex items-center justify-center">
-                 <span class="text-6xl font-serif text-white/40 font-bold select-none">{{ post.name.charAt(0).toUpperCase() }}</span>
-               </div>
-            </div>
-
-            <div class="p-6 md:p-8 flex flex-col flex-grow relative">
-              <!-- 日期标签 -->
-              <div class="flex items-center gap-2 mb-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
-                <Calendar class="w-3.5 h-3.5" />
-                <span>{{ new Date().toLocaleDateString('zh-CN') }}</span>
+            <div class="p-5 flex flex-col md:flex-row gap-6 items-start md:items-center">
+              <!-- 左侧信息: 日期 & 标签 -->
+              <div class="w-full md:w-48 flex-shrink-0 flex md:flex-col items-center md:items-start justify-between gap-2 text-xs">
+                <div class="flex items-center gap-2 text-gray-400 font-medium">
+                  <Calendar class="w-3.5 h-3.5" />
+                  <span>{{ new Date().toLocaleDateString('zh-CN') }}</span>
+                </div>
+                
+                <div class="flex flex-wrap gap-1 mt-1">
+                  <span 
+                    v-for="tag in (post.tags || [])" 
+                    :key="tag"
+                    class="px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-primary/10 hover:text-primary transition-colors"
+                  >
+                    #{{ tag }}
+                  </span>
+                </div>
               </div>
 
-              <!-- 标题 -->
-              <h2 class="text-xl md:text-2xl font-serif font-bold text-gray-900 dark:text-white mb-3 group-hover:text-accent transition-colors line-clamp-2 leading-tight">
-                {{ formatTitle(post.name) }}
-              </h2>
+              <!-- 中间: 标题 & 摘要 -->
+              <div class="flex-grow min-w-0">
+                <h2 class="text-lg font-serif font-bold text-gray-800 dark:text-gray-100 mb-2 group-hover:text-primary transition-colors truncate">
+                  {{ formatTitle(post.name) }}
+                </h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-1 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
+                  {{ post.summary }}
+                </p>
+              </div>
 
-              <!-- 摘要 -->
-              <p class="text-gray-600 dark:text-gray-300 mb-6 flex-grow line-clamp-3 leading-relaxed text-sm font-light">
-                {{ post.summary || `点击阅读关于 ${formatTitle(post.name)} 的详细内容。` }}
-              </p>
-
-              <!-- 底部链接 -->
-              <div class="flex items-center text-primary dark:text-white font-semibold text-sm group/link mt-auto">
-                <span class="relative z-20 border-b-2 border-transparent group-hover/link:border-accent transition-all pb-0.5">阅读全文</span>
-                <ArrowRight class="w-4 h-4 ml-2 transition-transform duration-300 group-hover/link:translate-x-1 text-accent" />
+              <!-- 右侧: 箭头 -->
+              <div class="hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-800 group-hover:bg-primary group-hover:text-white transition-all transform group-hover:translate-x-2">
+                <ArrowRight class="w-4 h-4" />
               </div>
             </div>
           </GlassCard>
         </TransitionGroup>
       </div>
 
-      <!-- 分页控件 -->
-      <div v-if="totalPages > 1" class="flex justify-center items-center gap-4 pt-12">
-        <GlassCard 
-          variant="interactive"
-          class="px-5 py-2.5 text-sm font-medium rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
-          @click="changePage(currentPage - 1)" 
-          :class="{ 'opacity-50 pointer-events-none': currentPage === 1 }"
+      <!-- 分页控件 (底部固定) -->
+      <div v-if="totalPages > 1" class="pt-6 border-t border-white/10 dark:border-white/5 flex justify-between items-center">
+        <button 
+          @click="currentPage--" 
+          :disabled="currentPage === 1"
+          class="text-sm font-medium text-gray-500 hover:text-primary disabled:opacity-30 disabled:hover:text-gray-500 transition-colors flex items-center gap-1"
         >
-          上一页
-        </GlassCard>
+          <ChevronLeft class="w-4 h-4" /> 上一页
+        </button>
         
-        <div class="flex items-center gap-2">
-          <button 
-            v-for="page in totalPages" 
-            :key="page"
-            @click="changePage(page)"
-            class="w-10 h-10 flex items-center justify-center text-sm font-bold rounded-full transition-all duration-300 backdrop-blur-sm"
-            :class="currentPage === page 
-              ? 'bg-primary text-white shadow-lg shadow-primary/30 scale-110' 
-              : 'bg-white/20 dark:bg-black/20 text-gray-600 dark:text-gray-300 hover:bg-white/40 dark:hover:bg-white/10'"
-          >
-            {{ page }}
-          </button>
-        </div>
+        <span class="text-xs font-mono text-gray-400">
+          {{ currentPage }} / {{ totalPages }}
+        </span>
 
-        <GlassCard 
-          variant="interactive"
-          class="px-5 py-2.5 text-sm font-medium rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
-          @click="changePage(currentPage + 1)" 
-          :class="{ 'opacity-50 pointer-events-none': currentPage === totalPages }"
+        <button 
+          @click="currentPage++" 
+          :disabled="currentPage === totalPages"
+          class="text-sm font-medium text-gray-500 hover:text-primary disabled:opacity-30 disabled:hover:text-gray-500 transition-colors flex items-center gap-1"
         >
-          下一页
-        </GlassCard>
+          下一页 <ChevronRight class="w-4 h-4" />
+        </button>
       </div>
     </div>
   </div>
@@ -145,92 +131,47 @@ import { getDirectoryContents, getFileContent } from '@/utils/github-client'
 import { parseFrontmatter } from '@/utils/frontmatter'
 import { useAuth } from '@/composables/useAuth'
 import { GITHUB_CONFIG } from '@/consts'
-import { Calendar, ArrowRight } from 'lucide-vue-next'
+import { Calendar, ArrowRight, Search, X, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import GlassCard from '@/components/GlassCard.vue'
 
 const router = useRouter()
 const { getAuthToken } = useAuth()
 
 // 状态
-const allPosts = ref([]) // 所有文章文件列表
-const displayedPosts = ref([]) // 当前页显示的文章（包含详情）
+const allPosts = ref([]) 
 const loading = ref(true)
 const error = ref(null)
+const searchQuery = ref('')
+const currentPage = ref(1)
+const pageSize = 10
+
+// 过滤后的文章 (搜索)
+const filteredPosts = computed(() => {
+  if (!searchQuery.value) return allPosts.value
+  
+  const query = searchQuery.value.toLowerCase()
+  return allPosts.value.filter(post => {
+    const titleMatch = post.name.toLowerCase().includes(query)
+    const summaryMatch = post.summary?.toLowerCase().includes(query)
+    const tagMatch = post.tags?.some(tag => tag.toLowerCase().includes(query))
+    return titleMatch || summaryMatch || tagMatch
+  })
+})
 
 // 分页
-const currentPage = ref(1)
-const pageSize = 6
-const totalPages = computed(() => Math.ceil(allPosts.value.length / pageSize))
+const totalPages = computed(() => Math.ceil(filteredPosts.value.length / pageSize))
+const paginatedPosts = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return filteredPosts.value.slice(start, start + pageSize)
+})
+
+// 监听搜索重置分页
+watch(searchQuery, () => {
+  currentPage.value = 1
+})
 
 const formatTitle = (filename) => {
   return filename.replace(/\.md$/, '').replace(/-/g, ' ')
-}
-
-// 随机渐变色生成
-const gradients = [
-  'from-rose-100 to-teal-100',
-  'from-blue-100 to-indigo-100',
-  'from-orange-100 to-rose-100',
-  'from-green-100 to-emerald-100',
-  'from-violet-100 to-fuchsia-100',
-  'from-yellow-100 to-amber-100',
-]
-
-const getRandomGradient = (index) => {
-  return gradients[index % gradients.length]
-}
-
-// 获取当前页的详细内容（封面图等）
-const loadPageContent = async () => {
-  loading.value = true
-  try {
-    const start = (currentPage.value - 1) * pageSize
-    const end = start + pageSize
-    const pageFiles = allPosts.value.slice(start, end)
-    
-    let token = null
-    try {
-      token = await getAuthToken()
-    } catch (e) {
-      // ignore
-    }
-
-    // 并行获取当前页所有文章的内容以提取 Frontmatter
-    const postsWithContent = await Promise.all(pageFiles.map(async (file) => {
-      try {
-        const rawContent = await getFileContent(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, file.path)
-        const { data, content } = parseFrontmatter(rawContent)
-        
-        // 提取摘要 (取前 100 个字符)
-        const summary = content.slice(0, 150).replace(/[#*`]/g, '') + '...'
-        
-        return {
-          ...file,
-          cover: data.cover,
-          summary: summary
-        }
-      } catch (err) {
-        console.error(`Failed to load content for ${file.name}`, err)
-        return file
-      }
-    }))
-    
-    displayedPosts.value = postsWithContent
-  } catch (err) {
-    console.error(err)
-    error.value = '加载文章详情失败'
-  } finally {
-    loading.value = false
-  }
-}
-
-// 切换分页
-const changePage = (page) => {
-  if (page < 1 || page > totalPages.value) return
-  currentPage.value = page
-  loadPageContent()
-  // 滚动到顶部
-  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 const fetchPosts = async () => {
@@ -242,19 +183,35 @@ const fetchPosts = async () => {
     try {
       token = await getAuthToken()
     } catch (e) {
-      console.log('未登录，尝试以访客模式访问', e)
+      // ignore
     }
 
     const files = await getDirectoryContents(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, 'posts')
-    // 过滤并按名称排序（或者按时间，如果 API 提供的话，但 GitHub Contents API 不提供修改时间，需要 Commit API，这里简单按文件名）
-    allPosts.value = files.filter(f => f.name.endsWith('.md'))
+    const mdFiles = files.filter(f => f.name.endsWith('.md'))
+
+    // 并行获取详情
+    const postsWithDetails = await Promise.all(mdFiles.map(async (file) => {
+      try {
+        const rawContent = await getFileContent(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, file.path)
+        const { data, content } = parseFrontmatter(rawContent)
+        
+        return {
+          ...file,
+          summary: content.slice(0, 100).replace(/[#*`]/g, '') + '...',
+          tags: data.tags || [], // 自动提取 tags
+          date: data.date // 如果有 date 字段
+        }
+      } catch (err) {
+        return { ...file, summary: '暂无预览', tags: [] }
+      }
+    }))
     
-    // 加载第一页
-    await loadPageContent()
+    allPosts.value = postsWithDetails
     
   } catch (e) {
     console.error(e)
-    error.value = '获取文章列表失败: ' + e.message
+    error.value = '获取文章列表失败'
+  } finally {
     loading.value = false
   }
 }
@@ -266,17 +223,22 @@ onMounted(() => {
 
 <style scoped>
 .animate-fade-in-up {
-  animation: fadeInUp 0.8s ease-out forwards;
+  animation: fadeInUp 0.6s ease-out forwards;
 }
 
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 列表过渡动画 */
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.4s ease;
+}
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(-20px);
 }
 </style>
