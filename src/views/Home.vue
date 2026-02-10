@@ -1,21 +1,21 @@
 <template>
   <div class="space-y-16">
     <!-- Hero 区域 -->
-    <header class="py-20 md:py-32 text-center space-y-8 animate-fade-in-up relative overflow-hidden rounded-3xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
-      <!-- 装饰背景 -->
-      <div class="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-60 dark:opacity-20"></div>
-      <div class="absolute -top-24 -left-24 w-64 h-64 bg-accent/20 rounded-full blur-3xl mix-blend-multiply dark:mix-blend-normal animate-blob"></div>
-      <div class="absolute -bottom-24 -right-24 w-64 h-64 bg-primary/20 rounded-full blur-3xl mix-blend-multiply dark:mix-blend-normal animate-blob animation-delay-2000"></div>
+    <header class="py-24 md:py-40 text-center space-y-8 animate-fade-in-up relative overflow-hidden rounded-3xl">
+      <GlassCard variant="default" class="absolute inset-0 -z-10 rounded-3xl" :hover="false"></GlassCard>
       
       <div class="relative z-10 px-4">
-        <span class="inline-block py-1 px-3 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-xs font-semibold tracking-wider text-primary mb-6 shadow-sm">
-          INSIGHTS & THOUGHTS
+        <span class="inline-block py-1.5 px-4 rounded-full bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/20 text-xs font-bold tracking-widest text-primary/80 dark:text-white/80 mb-8 shadow-sm uppercase">
+          Insights & Thoughts
         </span>
-        <h1 class="text-5xl md:text-7xl font-serif font-bold text-gray-900 dark:text-white tracking-tight mb-6 leading-tight">
-          思绪 <span class="text-accent italic font-light px-2">&</span> 随笔
+        <h1 class="text-5xl md:text-8xl font-serif font-bold text-primary dark:text-white tracking-tight mb-8 leading-tight drop-shadow-sm">
+          思绪 <span class="text-accent italic font-light px-2 relative inline-block">
+            &
+            <span class="absolute -top-2 -right-4 text-3xl animate-bounce delay-700">✨</span>
+          </span> 随笔
         </h1>
-        <p class="text-lg md:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed font-sans tracking-wide">
-          探索技术的边界，记录设计的灵感，分享生活的<span class="text-primary font-medium border-b-2 border-primary/20 dark:border-primary/40 pb-0.5">点滴瞬间</span>。
+        <p class="text-lg md:text-2xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed font-sans tracking-wide font-light">
+          探索技术的边界，记录设计的灵感，分享生活的<span class="text-primary dark:text-white font-medium border-b-2 border-accent/40 pb-0.5">点滴瞬间</span>。
         </p>
       </div>
     </header>
@@ -30,7 +30,7 @@
     </div>
 
     <!-- 错误提示 -->
-    <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 text-red-700 dark:text-red-400 p-6 rounded-xl text-center">
+    <div v-else-if="error" class="bg-red-50/50 dark:bg-red-900/20 backdrop-blur-md border border-red-100 dark:border-red-800 text-red-700 dark:text-red-400 p-6 rounded-xl text-center">
       <p class="font-medium">{{ error }}</p>
       <button @click="fetchPosts" class="mt-4 text-sm underline hover:text-red-800 dark:hover:text-red-300">重试</button>
     </div>
@@ -39,18 +39,24 @@
     <div v-else class="space-y-12">
       <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         <TransitionGroup name="list">
-          <div v-if="displayedPosts.length === 0" class="col-span-full text-center py-20 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-dashed border-gray-200 dark:border-gray-800">
-            <p class="text-gray-500 dark:text-gray-400 text-lg">暂无文章，请前往管理后台发布。</p>
+          <div v-if="displayedPosts.length === 0" class="col-span-full text-center py-20">
+            <GlassCard variant="light" class="p-10">
+              <p class="text-gray-500 dark:text-gray-400 text-lg">暂无文章，请前往管理后台发布。</p>
+            </GlassCard>
           </div>
 
-          <article 
+          <GlassCard 
             v-for="(post, index) in displayedPosts" 
             :key="post.sha"
-            class="group relative bg-white dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700 transition-all duration-500 hover:-translate-y-1 hover:shadow-xl dark:hover:shadow-gray-900/50 flex flex-col h-full"
+            variant="default"
+            :hover="true"
+            :shine="true"
+            class="rounded-2xl h-full flex flex-col group cursor-pointer"
             :style="{ transitionDelay: `${index * 50}ms` }"
+            @click="router.push('/post/' + post.name)"
           >
             <!-- 封面图区域 -->
-            <div class="aspect-[16/10] overflow-hidden relative bg-gray-100 dark:bg-gray-800">
+            <div class="aspect-[16/10] overflow-hidden relative border-b border-white/10">
                <!-- 图片 -->
                <img 
                  v-if="post.cover" 
@@ -65,72 +71,68 @@
                <div v-if="!post.cover" class="absolute inset-0 flex items-center justify-center">
                  <span class="text-6xl font-serif text-white/40 font-bold select-none">{{ post.name.charAt(0).toUpperCase() }}</span>
                </div>
-               
-               <!-- 悬浮遮罩 -->
-               <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500"></div>
             </div>
 
             <div class="p-6 md:p-8 flex flex-col flex-grow relative">
               <!-- 日期标签 -->
-              <div class="flex items-center gap-2 mb-4 text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+              <div class="flex items-center gap-2 mb-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
                 <Calendar class="w-3.5 h-3.5" />
                 <span>{{ new Date().toLocaleDateString('zh-CN') }}</span>
               </div>
 
               <!-- 标题 -->
-              <h2 class="text-xl md:text-2xl font-serif font-bold text-gray-900 dark:text-white mb-3 group-hover:text-primary transition-colors line-clamp-2 leading-tight">
-                <router-link :to="'/post/' + post.name" class="block focus:outline-none">
-                  <span class="absolute inset-0 z-10"></span>
-                  {{ formatTitle(post.name) }}
-                </router-link>
+              <h2 class="text-xl md:text-2xl font-serif font-bold text-gray-900 dark:text-white mb-3 group-hover:text-accent transition-colors line-clamp-2 leading-tight">
+                {{ formatTitle(post.name) }}
               </h2>
 
               <!-- 摘要 -->
-              <p class="text-gray-600 dark:text-gray-400 mb-6 flex-grow line-clamp-3 leading-relaxed text-sm">
+              <p class="text-gray-600 dark:text-gray-300 mb-6 flex-grow line-clamp-3 leading-relaxed text-sm font-light">
                 {{ post.summary || `点击阅读关于 ${formatTitle(post.name)} 的详细内容。` }}
               </p>
 
               <!-- 底部链接 -->
-              <div class="flex items-center text-primary font-semibold text-sm group/link mt-auto">
-                <span class="relative z-20">阅读全文</span>
-                <ArrowRight class="w-4 h-4 ml-1 transition-transform duration-300 group-hover/link:translate-x-1" />
+              <div class="flex items-center text-primary dark:text-white font-semibold text-sm group/link mt-auto">
+                <span class="relative z-20 border-b-2 border-transparent group-hover/link:border-accent transition-all pb-0.5">阅读全文</span>
+                <ArrowRight class="w-4 h-4 ml-2 transition-transform duration-300 group-hover/link:translate-x-1 text-accent" />
               </div>
             </div>
-          </article>
+          </GlassCard>
         </TransitionGroup>
       </div>
 
       <!-- 分页控件 -->
-      <div v-if="totalPages > 1" class="flex justify-center items-center gap-4 pt-12 border-t border-gray-100 dark:border-gray-800">
-        <button 
+      <div v-if="totalPages > 1" class="flex justify-center items-center gap-4 pt-12">
+        <GlassCard 
+          variant="interactive"
+          class="px-5 py-2.5 text-sm font-medium rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
           @click="changePage(currentPage - 1)" 
-          :disabled="currentPage === 1"
-          class="px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow"
+          :class="{ 'opacity-50 pointer-events-none': currentPage === 1 }"
         >
           上一页
-        </button>
+        </GlassCard>
         
         <div class="flex items-center gap-2">
           <button 
             v-for="page in totalPages" 
             :key="page"
             @click="changePage(page)"
-            class="w-9 h-9 flex items-center justify-center text-sm font-medium rounded-full transition-all"
+            class="w-10 h-10 flex items-center justify-center text-sm font-bold rounded-full transition-all duration-300 backdrop-blur-sm"
             :class="currentPage === page 
-              ? 'bg-primary text-white shadow-md shadow-primary/30 scale-110' 
-              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'"
+              ? 'bg-primary text-white shadow-lg shadow-primary/30 scale-110' 
+              : 'bg-white/20 dark:bg-black/20 text-gray-600 dark:text-gray-300 hover:bg-white/40 dark:hover:bg-white/10'"
           >
             {{ page }}
           </button>
         </div>
 
-        <button 
+        <GlassCard 
+          variant="interactive"
+          class="px-5 py-2.5 text-sm font-medium rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
           @click="changePage(currentPage + 1)" 
-          :disabled="currentPage === totalPages"
-          class="px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow"
+          :class="{ 'opacity-50 pointer-events-none': currentPage === totalPages }"
         >
           下一页
-        </button>
+        </GlassCard>
       </div>
     </div>
   </div>
@@ -138,12 +140,15 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { getDirectoryContents, getFileContent } from '@/utils/github-client'
 import { parseFrontmatter } from '@/utils/frontmatter'
 import { useAuth } from '@/composables/useAuth'
 import { GITHUB_CONFIG } from '@/consts'
 import { Calendar, ArrowRight } from 'lucide-vue-next'
+import GlassCard from '@/components/GlassCard.vue'
 
+const router = useRouter()
 const { getAuthToken } = useAuth()
 
 // 状态

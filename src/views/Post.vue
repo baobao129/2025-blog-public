@@ -15,84 +15,102 @@
       </div>
     </div>
 
-    <div v-else class="animate-fade-in-up">
+    <div v-else class="animate-fade-in-up relative z-10">
       <!-- 导航栏 -->
-      <nav class="mb-8 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+      <nav class="mb-8 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
         <router-link to="/" class="hover:text-primary dark:hover:text-white transition-colors">首页</router-link>
         <span>/</span>
         <span class="text-gray-400 dark:text-gray-500 truncate">{{ route.params.filename.replace('.md', '') }}</span>
       </nav>
 
-      <!-- 文章头部 -->
-      <header class="mb-12 text-center max-w-3xl mx-auto">
-        <div class="inline-flex items-center gap-2 px-3 py-1 bg-gray-50 dark:bg-gray-800 rounded-full text-xs font-medium text-gray-500 dark:text-gray-400 mb-6 border border-gray-100 dark:border-gray-700">
-          <Calendar class="w-3 h-3" />
-          <span>{{ new Date().toLocaleDateString('zh-CN') }}</span>
-        </div>
-        <h1 class="text-4xl md:text-5xl font-serif font-bold text-gray-900 dark:text-white mb-6 leading-tight">
-          {{ formatTitle(route.params.filename) }}
-        </h1>
-        <div class="flex items-center justify-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-          <div class="flex items-center gap-1">
-            <User class="w-4 h-4" />
-            <span>作者</span>
+      <!-- 文章头部 (Glassmorphism) -->
+      <header class="mb-12 text-center max-w-4xl mx-auto">
+        <GlassCard variant="default" class="p-8 md:p-12 rounded-3xl relative overflow-hidden">
+          <!-- 装饰 -->
+          <div class="absolute -top-20 -left-20 w-40 h-40 bg-primary/10 rounded-full blur-3xl"></div>
+          <div class="absolute -bottom-20 -right-20 w-40 h-40 bg-accent/10 rounded-full blur-3xl"></div>
+
+          <div class="relative z-10">
+            <div class="inline-flex items-center gap-2 px-3 py-1 bg-white/50 dark:bg-black/20 backdrop-blur-sm rounded-full text-xs font-bold text-gray-500 dark:text-gray-400 mb-6 border border-white/20 uppercase tracking-widest">
+              <Calendar class="w-3 h-3" />
+              <span>{{ new Date().toLocaleDateString('zh-CN') }}</span>
+            </div>
+            <h1 class="text-4xl md:text-6xl font-serif font-bold text-gray-900 dark:text-white mb-8 leading-tight drop-shadow-sm">
+              {{ formatTitle(route.params.filename) }}
+            </h1>
+            <div class="flex items-center justify-center gap-6 text-sm text-gray-600 dark:text-gray-300">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-gray-700 flex items-center justify-center text-white shadow-sm">
+                  <User class="w-4 h-4" />
+                </div>
+                <span class="font-medium">作者</span>
+              </div>
+              <div class="h-4 w-px bg-gray-300 dark:bg-gray-600"></div>
+              <div class="flex items-center gap-2">
+                <Clock class="w-4 h-4 text-accent" />
+                <span>约 {{ readingTime }} 分钟阅读</span>
+              </div>
+            </div>
           </div>
-          <span class="w-1 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></span>
-          <div class="flex items-center gap-1">
-            <Clock class="w-4 h-4" />
-            <span>约 {{ readingTime }} 分钟阅读</span>
-          </div>
-        </div>
+        </GlassCard>
       </header>
 
-      <div class="flex flex-col lg:flex-row gap-12 relative">
-        <!-- 文章内容 -->
-        <article class="prose prose-lg prose-zinc dark:prose-invert flex-1 min-w-0 max-w-none prose-headings:scroll-mt-24 prose-img:rounded-xl prose-img:shadow-lg">
-          <div v-html="contentHtml" ref="articleRef"></div>
-        </article>
+      <div class="flex flex-col lg:flex-row gap-8 relative">
+        <!-- 文章内容 (Glassmorphism) -->
+        <div class="flex-1 min-w-0">
+          <GlassCard variant="heavy" class="p-8 md:p-12 rounded-3xl">
+            <article class="prose prose-lg prose-zinc dark:prose-invert max-w-none prose-headings:scroll-mt-24 prose-img:rounded-2xl prose-img:shadow-lg prose-pre:bg-gray-900/90 prose-pre:backdrop-blur-sm">
+              <div v-html="contentHtml" ref="articleRef"></div>
+            </article>
+          </GlassCard>
+        </div>
 
         <!-- 侧边目录 (Desktop) -->
-        <aside class="hidden lg:block w-64 flex-shrink-0">
-          <div class="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pr-4 scrollbar-hide">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="font-serif font-bold text-gray-900 dark:text-white text-lg">目录</h3>
-              <button 
-                @click="router.push(`/playground/${route.params.filename}`)"
-                class="text-xs flex items-center gap-1 px-2 py-1 bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary-300 rounded-md hover:bg-primary/20 dark:hover:bg-primary/30 transition-colors"
-                title="开启沉浸式代码演练"
-              >
-                <Code2 class="w-3 h-3" />
-                演练模式
-              </button>
-            </div>
-            <nav v-if="toc.length > 0">
-                <ul class="space-y-2 text-sm border-l border-gray-200 dark:border-gray-700">
-                  <li v-for="item in toc" :key="item.id" :class="{ 'pl-3': item.level === 2, 'pl-6': item.level === 3 }">
-                    <a 
-                      :href="`#${item.id}`" 
-                      @click.prevent="scrollToHeading(item.id)"
-                      class="block py-1 text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors border-l-2 border-transparent -ml-[1px] pl-3 hover:border-primary dark:hover:border-primary-300"
-                      :class="{ 'text-primary dark:text-white border-primary dark:border-primary-300 font-medium': activeId === item.id }"
-                    >
-                      {{ item.text }}
-                    </a>
-                  </li>
-                </ul>
-            </nav>
-            <p v-else class="text-gray-400 dark:text-gray-500 text-sm italic">暂无目录</p>
+        <aside class="hidden lg:block w-72 flex-shrink-0">
+          <div class="sticky top-24">
+            <GlassCard variant="default" class="p-6 rounded-2xl max-h-[calc(100vh-8rem)] overflow-y-auto pr-2 scrollbar-hide">
+              <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200/50 dark:border-gray-700/50">
+                <h3 class="font-serif font-bold text-gray-900 dark:text-white text-lg">目录</h3>
+                <button 
+                  @click="router.push(`/playground/${route.params.filename}`)"
+                  class="text-xs flex items-center gap-1 px-2.5 py-1.5 bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary-300 rounded-lg hover:bg-primary/20 dark:hover:bg-primary/30 transition-all font-medium"
+                  title="开启沉浸式代码演练"
+                >
+                  <Code2 class="w-3.5 h-3.5" />
+                  演练
+                </button>
+              </div>
+              <nav v-if="toc.length > 0">
+                  <ul class="space-y-1 text-sm">
+                    <li v-for="item in toc" :key="item.id" :class="{ 'pl-3': item.level === 2, 'pl-6': item.level === 3 }">
+                      <a 
+                        :href="`#${item.id}`" 
+                        @click.prevent="scrollToHeading(item.id)"
+                        class="block py-1.5 px-3 rounded-lg transition-all duration-300 border-l-2"
+                        :class="activeId === item.id 
+                          ? 'bg-primary/5 dark:bg-white/10 text-primary dark:text-white border-primary font-medium translate-x-1' 
+                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 border-transparent hover:bg-black/5 dark:hover:bg-white/5'"
+                      >
+                        {{ item.text }}
+                      </a>
+                    </li>
+                  </ul>
+              </nav>
+              <p v-else class="text-gray-400 dark:text-gray-500 text-sm italic text-center py-4">暂无目录</p>
+            </GlassCard>
           </div>
         </aside>
       </div>
 
       <!-- 底部导航 -->
-      <div class="border-t border-gray-100 dark:border-gray-800 pt-12 mt-12 flex justify-between max-w-3xl mx-auto lg:max-w-none">
-        <router-link to="/" class="group flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors">
+      <div class="mt-12 flex justify-between max-w-4xl mx-auto lg:max-w-none">
+        <button @click="router.push('/')" class="group flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 hover:bg-white/40 dark:bg-black/20 dark:hover:bg-black/40 backdrop-blur-sm transition-all text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-white">
           <ArrowLeft class="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           <span>返回首页</span>
-        </router-link>
+        </button>
         <button 
           @click="scrollToTop" 
-          class="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors"
+          class="px-4 py-2 rounded-full bg-white/20 hover:bg-white/40 dark:bg-black/20 dark:hover:bg-black/40 backdrop-blur-sm transition-all text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-white"
         >
           回到顶部 &uarr;
         </button>
@@ -113,6 +131,7 @@ import { useAuth } from '@/composables/useAuth'
 import { GITHUB_CONFIG } from '@/consts'
 import { Calendar, Clock, User, ArrowLeft, Code2 } from 'lucide-vue-next'
 import ReadingProgress from '@/components/ReadingProgress.vue'
+import GlassCard from '@/components/GlassCard.vue'
 
 const route = useRoute()
 const router = useRouter()
