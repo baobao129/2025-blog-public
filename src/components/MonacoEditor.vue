@@ -88,7 +88,8 @@ const initMonaco = () => {
   if (!container.value) return
 
   // 全局一次性初始化 (Snippets 和 Emmet)
-  if (!window.__MONACO_PROVIDERS_INITIALIZED__) {
+  // 使用 monaco 实例上的标记，避免 HMR 问题
+  if (!monaco.__providers_initialized) {
     // 注册 Snippets
     registerSnippets()
 
@@ -97,7 +98,7 @@ const initMonaco = () => {
     emmetCSS(monaco, ['css', 'less', 'scss'])
     emmetJSX(monaco, ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'])
     
-    window.__MONACO_PROVIDERS_INITIALIZED__ = true
+    monaco.__providers_initialized = true
   }
 
   editor = monaco.editor.create(container.value, {
@@ -116,10 +117,17 @@ const initMonaco = () => {
     scrollBeyondLastLine: false,
     autoClosingBrackets: 'always', // 自动闭合括号
     autoClosingQuotes: 'always',
-    quickSuggestions: true,
+    quickSuggestions: {
+      other: true,
+      comments: true,
+      strings: true
+    },
     suggest: {
-      showWords: true
-    }
+      showWords: true,
+      snippetsPreventQuickSuggestions: false
+    },
+    tabCompletion: 'on', // 启用 Tab 补全
+    snippetSuggestions: 'top', // 将 Snippet 建议置顶
   })
 
   // 监听内容变化
