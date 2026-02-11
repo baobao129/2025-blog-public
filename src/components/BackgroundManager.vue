@@ -30,71 +30,73 @@
       :style="{ opacity: overlayOpacity }"
     ></div>
 
-    <!-- 控制面板 (仅在管理模式或特定触发下显示，这里简化为一直存在但可折叠) -->
-    <Transition name="slide-up">
-      <div v-if="showSettings" class="fixed bottom-6 right-6 z-[100]">
-        <GlassCard variant="heavy" class="p-4 w-72">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-sm font-bold text-gray-800 dark:text-white flex items-center gap-2">
-              <Palette class="w-4 h-4" />
-              背景设置
-            </h3>
-            <button @click="showSettings = false" class="text-gray-500 hover:text-gray-800 dark:hover:text-white">
-              <X class="w-4 h-4" />
-            </button>
-          </div>
+    <!-- 控制面板 -->
+    <Teleport to="body">
+      <Transition name="slide-up">
+        <div v-if="showSettings" class="fixed bottom-6 right-6 z-[9999]">
+          <GlassCard variant="heavy" class="p-4 w-72">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-sm font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                <Palette class="w-4 h-4" />
+                背景设置
+              </h3>
+              <button @click="showSettings = false" class="text-gray-500 hover:text-gray-800 dark:hover:text-white">
+                <X class="w-4 h-4" />
+              </button>
+            </div>
 
-          <!-- 类型选择 -->
-          <div class="grid grid-cols-3 gap-2 mb-4">
-            <button 
-              v-for="type in ['gradient', 'image', 'video']" 
-              :key="type"
-              @click="setBgType(type)"
-              class="px-2 py-1.5 text-xs rounded-md transition-all border"
-              :class="bgType === type 
-                ? 'bg-primary text-white border-primary' 
-                : 'bg-transparent text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-primary/50'"
-            >
-              {{ typeLabels[type] }}
-            </button>
-          </div>
+            <!-- 类型选择 -->
+            <div class="grid grid-cols-3 gap-2 mb-4">
+              <button 
+                v-for="type in ['gradient', 'image', 'video']" 
+                :key="type"
+                @click="setBgType(type)"
+                class="px-2 py-1.5 text-xs rounded-md transition-all border"
+                :class="bgType === type 
+                  ? 'bg-primary text-white border-primary' 
+                  : 'bg-transparent text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-primary/50'"
+              >
+                {{ typeLabels[type] }}
+              </button>
+            </div>
 
-          <!-- 遮罩调节 -->
-          <div class="mb-4">
-            <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">遮罩浓度 ({{ Math.round(overlayOpacity * 100) }}%)</label>
-            <input 
-              type="range" 
-              min="0" 
-              max="0.9" 
-              step="0.05" 
-              v-model.number="overlayOpacity"
-              class="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary"
-            >
-          </div>
+            <!-- 遮罩调节 -->
+            <div class="mb-4">
+              <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">遮罩浓度 ({{ Math.round(overlayOpacity * 100) }}%)</label>
+              <input 
+                type="range" 
+                min="0" 
+                max="0.9" 
+                step="0.05" 
+                v-model.number="overlayOpacity"
+                class="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary"
+              >
+            </div>
 
-          <!-- 上传 -->
-          <div v-if="bgType !== 'gradient'" class="mt-2">
-            <label class="block w-full p-2 text-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-primary hover:bg-primary/5 transition-all group">
-              <span class="text-xs text-gray-500 group-hover:text-primary flex items-center justify-center gap-2">
-                <Upload class="w-3 h-3" />
-                上传{{ bgType === 'image' ? '图片' : '视频' }}
-              </span>
-              <input type="file" class="hidden" :accept="bgType === 'image' ? 'image/*' : 'video/*'" @change="handleUpload">
-            </label>
-          </div>
-        </GlassCard>
-      </div>
-    </Transition>
+            <!-- 上传 -->
+            <div v-if="bgType !== 'gradient'" class="mt-2">
+              <label class="block w-full p-2 text-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-primary hover:bg-primary/5 transition-all group">
+                <span class="text-xs text-gray-500 group-hover:text-primary flex items-center justify-center gap-2">
+                  <Upload class="w-3 h-3" />
+                  上传{{ bgType === 'image' ? '图片' : '视频' }}
+                </span>
+                <input type="file" class="hidden" :accept="bgType === 'image' ? 'image/*' : 'video/*'" @change="handleUpload">
+              </label>
+            </div>
+          </GlassCard>
+        </div>
+      </Transition>
 
-    <!-- 设置开关 -->
-    <button 
-      v-if="!showSettings"
-      @click="showSettings = true"
-      class="fixed bottom-6 right-6 z-[9999] p-3 rounded-full bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/20 shadow-lg text-gray-700 dark:text-gray-200 hover:bg-primary hover:text-white transition-all hover:scale-110 group cursor-pointer pointer-events-auto"
-      title="背景设置"
-    >
-      <Settings2 class="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
-    </button>
+      <!-- 设置开关 -->
+      <button 
+        v-if="!showSettings"
+        @click="showSettings = true"
+        class="fixed bottom-6 right-6 z-[9999] p-3 rounded-full bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/20 shadow-lg text-gray-700 dark:text-gray-200 hover:bg-primary hover:text-white transition-all hover:scale-110 group cursor-pointer pointer-events-auto"
+        title="背景设置"
+      >
+        <Settings2 class="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
+      </button>
+    </Teleport>
   </div>
 </template>
 

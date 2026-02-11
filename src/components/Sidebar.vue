@@ -42,8 +42,6 @@
         >
           <GithubIcon class="w-5 h-5" />
         </a>
-        <div class="h-4 w-px bg-gray-300/50 dark:bg-gray-600/50"></div>
-        <ThemeToggle />
       </div>
       
       <div class="text-xs text-gray-400 dark:text-gray-600 px-6 font-mono">
@@ -55,7 +53,6 @@
 
 <script setup>
 import { Home, LayoutGrid, Feather, Github as GithubIcon } from 'lucide-vue-next'
-import ThemeToggle from './ThemeToggle.vue'
 
 const navItems = [
   { name: '首页', path: '/', icon: Home },
