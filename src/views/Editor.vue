@@ -314,7 +314,10 @@ marked.setOptions({
       return hljs.highlight(code, { language: lang }).value
     }
     return hljs.highlightAuto(code).value
-  }
+  },
+  langPrefix: 'hljs language-',
+  breaks: true,
+  gfm: true
 })
 
 const previewHtml = computed(() => {
