@@ -87,56 +87,64 @@ const registerSnippets = () => {
 const initMonaco = () => {
   if (!container.value) return
 
-  // 全局一次性初始化 (Snippets 和 Emmet)
-  // 使用 monaco 实例上的标记，避免 HMR 问题
-  if (!monaco.__providers_initialized) {
-    // 注册 Snippets
-    registerSnippets()
+  try {
+    // 全局一次性初始化 (Snippets 和 Emmet)
+    // 使用 window 上的全局标记，避免 HMR 问题且不修改 monaco 模块对象
+    if (!window.__MONACO_PROVIDERS_INITIALIZED__) {
+      try {
+        // 注册 Snippets
+        registerSnippets()
 
-    // 启用 Emmet (确保只初始化一次，并支持 Markdown)
-    emmetHTML(monaco, ['html', 'markdown'])
-    emmetCSS(monaco, ['css', 'less', 'scss'])
-    emmetJSX(monaco, ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'])
-    
-    monaco.__providers_initialized = true
-  }
-
-  editor = monaco.editor.create(container.value, {
-    value: props.modelValue,
-    language: props.language,
-    theme: 'vs-dark', // 恢复默认深色主题
-    automaticLayout: true, // 自动布局
-    fontSize: 14,
-    fontFamily: '"JetBrains Mono", "Menlo", "Monaco", "Courier New", monospace',
-    tabSize: 2,
-    insertSpaces: true,
-    wordWrap: 'on', // 自动换行
-    minimap: { enabled: false }, // 隐藏缩略图
-    lineNumbers: 'on',
-    renderLineHighlight: 'all', // 高亮当前行
-    scrollBeyondLastLine: false,
-    autoClosingBrackets: 'always', // 自动闭合括号
-    autoClosingQuotes: 'always',
-    quickSuggestions: {
-      other: true,
-      comments: true,
-      strings: true
-    },
-    suggest: {
-      showWords: true,
-      snippetsPreventQuickSuggestions: false
-    },
-    tabCompletion: 'on', // 启用 Tab 补全
-    snippetSuggestions: 'top', // 将 Snippet 建议置顶
-  })
-
-  // 监听内容变化
-  editor.onDidChangeModelContent(() => {
-    const value = editor.getValue()
-    if (value !== props.modelValue) {
-      emit('update:modelValue', value)
+        // 启用 Emmet (确保只初始化一次，并支持 Markdown)
+        emmetHTML(monaco, ['html', 'markdown'])
+        emmetCSS(monaco, ['css', 'less', 'scss'])
+        emmetJSX(monaco, ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'])
+        
+        window.__MONACO_PROVIDERS_INITIALIZED__ = true
+      } catch (err) {
+        console.warn('Failed to initialize Monaco providers:', err)
+      }
     }
-  })
+
+    editor = monaco.editor.create(container.value, {
+      value: props.modelValue,
+      language: props.language,
+      theme: 'vs-dark', // 恢复默认深色主题
+      automaticLayout: true, // 自动布局
+      fontSize: 14,
+      fontFamily: '"JetBrains Mono", "Menlo", "Monaco", "Courier New", monospace',
+      tabSize: 2,
+      insertSpaces: true,
+      wordWrap: 'on', // 自动换行
+      minimap: { enabled: false }, // 隐藏缩略图
+      lineNumbers: 'on',
+      renderLineHighlight: 'all', // 高亮当前行
+      scrollBeyondLastLine: false,
+      autoClosingBrackets: 'always', // 自动闭合括号
+      autoClosingQuotes: 'always',
+      quickSuggestions: {
+        other: true,
+        comments: true,
+        strings: true
+      },
+      suggest: {
+        showWords: true,
+        snippetsPreventQuickSuggestions: false
+      },
+      tabCompletion: 'on', // 启用 Tab 补全
+      snippetSuggestions: 'top', // 将 Snippet 建议置顶
+    })
+
+    // 监听内容变化
+    editor.onDidChangeModelContent(() => {
+      const value = editor.getValue()
+      if (value !== props.modelValue) {
+        emit('update:modelValue', value)
+      }
+    })
+  } catch (err) {
+    console.error('Failed to create Monaco Editor instance:', err)
+  }
 }
 
 // 监听外部 modelValue 变化（例如加载草稿时）
