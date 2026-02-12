@@ -51,3 +51,19 @@ html.dark {
 ::selection {
   @apply bg-accent-light/30 text-text-main dark:bg-accent/30 dark:text-white;
 }
+
+/* 强制 highlight.js 样式覆盖 Tailwind Typography */
+.prose pre code {
+  color: inherit !important;
+  background-color: transparent !important;
+}
+
+.prose pre {
+  background-color: #282c34 !important; /* Atom One Dark background */
+  color: #abb2bf !important;
+}
+
+.hljs {
+  background: transparent !important;
+  padding: 0 !important;
+}

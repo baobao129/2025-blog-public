@@ -1,6 +1,6 @@
 import { createApp } from 'vue'
 import './style.css'
-import 'highlight.js/styles/github.css' // 引入 highlight.js 样式
+import 'highlight.js/styles/atom-one-dark.css' // 统一使用深色主题
 import 'monaco-editor/min/vs/editor/editor.main.css' // 引入 monaco-editor 样式
 import App from './App.vue'
 import router from './router'
