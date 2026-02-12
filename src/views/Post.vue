@@ -156,6 +156,7 @@ marked.setOptions({
     }
     return hljs.highlightAuto(code).value
   },
+  langPrefix: 'hljs language-',
   breaks: true,
   gfm: true
 })
